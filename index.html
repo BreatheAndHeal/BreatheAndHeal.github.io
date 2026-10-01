@@ -102,7 +102,7 @@ footer{padding:42px 0 52px;border-top:1px solid var(--line);font-size:13px;color
 <div class="q-block"><h4>4. How often have you felt mentally or emotionally overloaded?</h4><div class="choice-row"><span class="choice"><input id="q4a" type="radio" name="q4" value="0"><label for="q4a">Rarely</label></span><span class="choice"><input id="q4b" type="radio" name="q4" value="1"><label for="q4b">Sometimes</label></span><span class="choice"><input id="q4c" type="radio" name="q4" value="2"><label for="q4c">Often</label></span><span class="choice"><input id="q4d" type="radio" name="q4" value="3"><label for="q4d">Nearly daily</label></span></div></div>
 <div class="q-block"><h4>5. How clear do you feel about what you need right now?</h4><div class="choice-row"><span class="choice"><input id="q5a" type="radio" name="q5" value="0"><label for="q5a">Quite clear</label></span><span class="choice"><input id="q5b" type="radio" name="q5" value="1"><label for="q5b">A little</label></span><span class="choice"><input id="q5c" type="radio" name="q5" value="2"><label for="q5c">Unclear</label></span><span class="choice"><input id="q5d" type="radio" name="q5" value="3"><label for="q5d">Very unclear</label></span></div></div>
 <button class="btn primary" type="submit" style="width:100%">See my reflection →</button>
-</form><div class="result" id="result"><b id="resultTitle"></b><p id="resultText"></p><a class="btn secondary" href="#book">Talk it through privately →</a></div></div></div></section>
+</form><div class="result" id="result"><b id="resultTitle"></b><p id="resultText"></p><div id="paymentArea" style="display:none;margin-top:16px"><p style="margin:0 0 10px;font-size:13px"><strong>After your session slot is confirmed:</strong></p><a class="btn primary" id="paymentBtn" href="#" target="_blank" rel="noopener">Proceed to payment →</a></div><a class="btn secondary" href="#book" style="margin-top:10px">Review booking details</a></div></div></div></section>
 
 <section class="soft" id="sessions"><div class="wrap"><div class="center"><p class="kicker">PRIVATE SESSIONS</p><h2 class="section-title">Choose the time that feels right.</h2><p class="section-copy">Current introductory pricing. Your slot is confirmed before payment.</p></div><div class="sessions">
 <article class="session featured"><span class="badge">FIRST SESSION • 50% OFF</span><h3>First Conversation</h3><p class="old">₹999</p><div class="price">₹499</div><div class="save">Introductory offer</div><ul><li>30-minute private conversation</li><li>Hindi, Hinglish or English</li><li>Ideal for a first conversation</li></ul><a class="btn primary choose" href="#book" data-session="First Conversation — 30 min">Choose this →</a></article>
@@ -126,6 +126,11 @@ footer{padding:42px 0 52px;border-top:1px solid var(--line);font-size:13px;color
 
 <script>
 const WHATSAPP_NUMBER="917905806974";
+const PAYMENT_LINKS={
+ "First Conversation — 30 min":"https://rzp.io/rzp/Ju2rbcU",
+ "Deep Conversation — 45 min":"",
+ "Extended Session — 60 min":""
+};
 const links=document.getElementById("links"),menu=document.getElementById("menu");
 menu?.addEventListener("click",()=>links.classList.toggle("open"));
 document.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>links?.classList.remove("open")));
@@ -151,6 +156,9 @@ document.getElementById("booking").addEventListener("submit",e=>{
  const msg=["Hello, I'd like to book a private session with The Unsaid.","","Session: "+q("session"),"Name: "+q("name"),"Email: "+q("email"),"WhatsApp: "+q("whatsapp"),"Preferred date: "+q("date"),"Preferred time: "+q("time"),"Language: "+q("language"),"What I'd like to talk about: "+(q("message")||"Not specified")].join("\n");
  window.open("https://wa.me/"+WHATSAPP_NUMBER+"?text="+encodeURIComponent(msg),"_blank","noopener");
  s.textContent="Your booking message is ready in WhatsApp. Please send it to complete the request.";
+ const chosen=q("session"), pay=PAYMENT_LINKS[chosen], area=document.getElementById("paymentArea"), button=document.getElementById("paymentBtn");
+ if(pay){button.href=pay;area.style.display="block";}else{area.style.display="none";}
+
 });
 
 document.getElementById("checkinForm").addEventListener("submit",e=>{
