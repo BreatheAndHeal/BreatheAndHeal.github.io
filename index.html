@@ -283,7 +283,20 @@ async function recoverPendingBooking(bookingId,type){
            "Payment verified. Booking reserved while the meeting link is created.":
            "Booking confirmed successfully."
          );
-         try{localStorage.removeItem("theUnsaidPendingBooking")}catch(_){}
+         // Keep the recovery record when Calendar/Meet is still pending.
+         // Remove it only after the booking is fully confirmed with a Meet link.
+         try{
+           if(!pending){
+             localStorage.removeItem("theUnsaidPendingBooking");
+           }else{
+             localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({
+               bookingId:data.bookingId,
+               type,
+               session:data.session,
+               createdAt:Date.now()
+             }));
+           }
+         }catch(_){}
          const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
          submit.disabled=false;
          submit.textContent=pending?"Payment received ✓":"Payment complete ✓";
