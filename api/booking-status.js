@@ -1,6 +1,8 @@
 const { sql } = require("../lib/db");
+const { handleOptions } = require("../lib/config");
 
 module.exports = async (req,res) => {
+  if(handleOptions(req,res)) return;
   if(req.method!=="GET") return res.status(405).json({error:"Method not allowed."});
 
   try{
@@ -14,6 +16,8 @@ module.exports = async (req,res) => {
     const booking=rows[0];
     if(!booking) return res.status(404).json({error:"Booking not found."});
 
+    res.setHeader("Access-Control-Allow-Origin","https://breatheandheal.github.io");
+    res.setHeader("Vary","Origin");
     return res.status(200).json({
       ok:true,
       bookingId:booking.id,
