@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
-const { SESSIONS, json } = require("../lib/config");
+const { SESSIONS, json, handleOptions } = require("../lib/config");
 const { createMeetEvent } = require("../lib/calendar");
 
 function safeEqualHex(a,b){
@@ -22,6 +22,7 @@ async function fetchRazorpayPayment(paymentId){
 }
 
 module.exports = async (req,res) => {
+  if(handleOptions(req,res)) return;
   if(req.method !== "POST") return json(res,405,{error:"Method not allowed."});
   try {
     const {
