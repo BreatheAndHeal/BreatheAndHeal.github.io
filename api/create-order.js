@@ -1,8 +1,9 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
-const { SESSIONS, json, isValidEmail, clean, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
+const { SESSIONS, json, handleOptions, isValidEmail, clean, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
 
 module.exports = async (req,res) => {
+  if(handleOptions(req,res)) return;
   if(req.method !== "POST") return json(res,405,{error:"Method not allowed."});
   try {
     const body=req.body || {};
