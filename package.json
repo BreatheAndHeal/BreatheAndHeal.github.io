@@ -1,8 +1,11 @@
 {
-  "name":"the-unsaid-booking-backend",
-  "private":true,
-  "type":"commonjs",
-  "dependencies":{
-    "@neondatabase/serverless":"^1.0.1"
+  "name": "the-unsaid-booking-backend",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }
