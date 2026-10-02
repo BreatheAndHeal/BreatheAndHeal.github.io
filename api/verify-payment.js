@@ -36,7 +36,7 @@ module.exports = async (req,res) => {
           updated_at=NOW()
       WHERE id=${bookingId}`;
 
-    await sql`DELETE FROM slot_locks WHERE booking_id=${bookingId}`;
+    await sql`UPDATE slot_locks SET expires_at=NULL WHERE booking_id=${bookingId}`;
 
     let calendar=null;
     try{
