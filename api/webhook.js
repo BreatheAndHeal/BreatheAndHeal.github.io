@@ -1,5 +1,5 @@
 const { sql } = require("../lib/db");
-const { createMeetEvent } = require("../lib/calendar");
+const { confirmPaidBooking } = require("../lib/confirm-booking");
 const crypto = require("crypto");
 
 async function rawBody(req){
@@ -14,54 +14,6 @@ function sameHex(a,b){
     Buffer.from(a,"utf8"),
     Buffer.from(b,"utf8")
   );
-}
-
-async function confirmPaidBooking(bookingId){
-  const rows=await sql`SELECT * FROM bookings WHERE id=${bookingId} LIMIT 1`;
-  const booking=rows[0];
-  if(!booking) return {ok:false,reason:"booking_not_found"};
-
-  if(booking.booking_status==="confirmed" && booking.meet_link){
-    return {ok:true,confirmed:true,meetLink:booking.meet_link};
-  }
-
-  await sql`UPDATE bookings
-    SET payment_status='paid',
-        booking_status='paid_pending_confirmation',
-        expires_at=NULL,
-        updated_at=NOW()
-    WHERE id=${bookingId}`;
-
-  await sql`UPDATE slot_locks SET expires_at=NULL WHERE booking_id=${bookingId}`;
-
-  try{
-    const calendar=await createMeetEvent({
-      bookingId:booking.id,
-      service:booking.service,
-      sessionName:booking.session_name,
-      startDate:String(booking.booking_date).slice(0,10),
-      startTime:String(booking.booking_time).slice(0,5),
-      durationMinutes:booking.duration_minutes,
-      customerName:booking.customer_name,
-      customerEmail:booking.customer_email,
-      notes:booking.message
-    });
-
-    if(calendar?.meetLink){
-      await sql`UPDATE bookings
-        SET booking_status='confirmed',
-            meet_link=${calendar.meetLink},
-            calendar_event_id=${calendar.eventId||null},
-            updated_at=NOW()
-        WHERE id=${bookingId}`;
-
-      return {ok:true,confirmed:true,meetLink:calendar.meetLink};
-    }
-  }catch(err){
-    console.error("calendar:",err);
-  }
-
-  return {ok:true,confirmed:false,meetLink:null};
 }
 
 module.exports = async (req,res) => {

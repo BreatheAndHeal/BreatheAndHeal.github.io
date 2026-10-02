@@ -1,5 +1,6 @@
 const { sql } = require("../lib/db");
 const { handleOptions } = require("../lib/config");
+const { confirmPaidBooking } = require("../lib/confirm-booking");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
@@ -9,12 +10,26 @@ module.exports = async (req,res) => {
     const bookingId=String(req.query?.bookingId||"").trim();
     if(!bookingId) return res.status(400).json({error:"Missing bookingId."});
 
-    const rows=await sql`SELECT id,service,session_name,booking_date,booking_time,
-      payment_status,booking_status,meet_link
+    let rows=await sql`SELECT id,service,session_name,booking_date,booking_time,
+      payment_status,booking_status,meet_link,calendar_event_id
       FROM bookings WHERE id=${bookingId} LIMIT 1`;
 
-    const booking=rows[0];
+    let booking=rows[0];
     if(!booking) return res.status(404).json({error:"Booking not found."});
+
+    if(booking.payment_status==="paid" &&
+       (booking.booking_status==="paid_pending_confirmation" || booking.booking_status==="calendar_processing") &&
+       !booking.meet_link){
+      try{
+        await confirmPaidBooking(bookingId);
+        rows=await sql`SELECT id,service,session_name,booking_date,booking_time,
+          payment_status,booking_status,meet_link,calendar_event_id
+          FROM bookings WHERE id=${bookingId} LIMIT 1`;
+        booking=rows[0]||booking;
+      }catch(err){
+        console.error("booking-status calendar retry:",err);
+      }
+    }
 
     res.setHeader("Access-Control-Allow-Origin","https://breatheandheal.github.io");
     res.setHeader("Vary","Origin");

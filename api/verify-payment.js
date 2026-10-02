@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
 const { SESSIONS, json, handleOptions } = require("../lib/config");
-const { createMeetEvent } = require("../lib/calendar");
+const { confirmPaidBooking } = require("../lib/confirm-booking");
 
 function safeEqualHex(a,b){
   if(!a || !b || a.length !== b.length) return false;
@@ -87,67 +87,23 @@ module.exports = async (req,res) => {
 
     await sql`UPDATE slot_locks SET expires_at=NULL WHERE booking_id=${bookingId}`;
 
-    let calendar=null;
-    try{
-      calendar=await createMeetEvent({
-        bookingId:booking.id,
-        service:booking.service,
-        sessionName:booking.session_name,
-        startDate:String(booking.booking_date).slice(0,10),
-        startTime:String(booking.booking_time).slice(0,5),
-        durationMinutes:booking.duration_minutes,
-        customerName:booking.customer_name,
-        customerEmail:booking.customer_email,
-        notes:booking.message
-      });
-    }catch(calendarErr){
-      console.error("calendar:",calendarErr);
-      return json(res,200,{
-        ok:true,
-        pending:true,
-        bookingId,
-        service:booking.service,
-        session:booking.session_name,
-        date:String(booking.booking_date).slice(0,10),
-        time:String(booking.booking_time).slice(0,5),
-        meetLink:null,
-        calendarPending:true,
-        message:"Payment verified. Your booking is reserved, and the Google Meet link is still being created."
-      });
-    }
-
-    if(!calendar?.meetLink){
-      return json(res,200,{
-        ok:true,
-        pending:true,
-        bookingId,
-        service:booking.service,
-        session:booking.session_name,
-        date:String(booking.booking_date).slice(0,10),
-        time:String(booking.booking_time).slice(0,5),
-        meetLink:null,
-        calendarPending:true,
-        message:"Payment verified. Your booking is reserved, and the Google Meet link is still being created."
-      });
-    }
-
-    await sql`UPDATE bookings
-      SET booking_status='confirmed',
-          meet_link=${calendar.meetLink},
-          calendar_event_id=${calendar.eventId||null},
-          updated_at=NOW()
-      WHERE id=${bookingId}`;
+    const confirmation=await confirmPaidBooking(bookingId);
+    const fresh=(await sql`SELECT * FROM bookings WHERE id=${bookingId} LIMIT 1`);
+    const current=fresh[0]||booking;
 
     return json(res,200,{
       ok:true,
-      pending:false,
+      pending:!confirmation.confirmed,
       bookingId,
-      service:booking.service,
-      session:booking.session_name,
-      date:String(booking.booking_date).slice(0,10),
-      time:String(booking.booking_time).slice(0,5),
-      meetLink:calendar.meetLink,
-      calendarPending:false
+      service:current.service,
+      session:current.session_name,
+      date:String(current.booking_date).slice(0,10),
+      time:String(current.booking_time).slice(0,5),
+      meetLink:confirmation.meetLink||current.meet_link||null,
+      calendarPending:!confirmation.confirmed,
+      message:confirmation.confirmed
+        ? "Payment verified and booking confirmed."
+        : "Payment verified. Your booking is reserved, and the Google Meet link is still being created."
     });
   }catch(err){
     console.error(err);
