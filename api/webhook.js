@@ -24,6 +24,7 @@ module.exports = async (req,res) => {
       await sql`UPDATE bookings
         SET razorpay_payment_id=COALESCE(razorpay_payment_id,${payment.id}),
             payment_status='paid',
+            booking_status=CASE WHEN booking_status='confirmed' THEN booking_status ELSE 'paid_pending_confirmation' END,
             expires_at=NULL,
             updated_at=NOW()
         WHERE razorpay_order_id=${orderId}`;
