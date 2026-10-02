@@ -13,6 +13,7 @@ module.exports = async (req,res) => {
     let rows=await sql`SELECT id,service,session_name,booking_date,booking_time,
       payment_status,booking_status,meet_link,calendar_event_id
       FROM bookings WHERE id=${bookingId} LIMIT 1`;
+    let calendarError=null;
 
     let booking=rows[0];
     if(!booking) return res.status(404).json({error:"Booking not found."});
@@ -21,7 +22,8 @@ module.exports = async (req,res) => {
        (booking.booking_status==="paid_pending_confirmation" || booking.booking_status==="calendar_processing") &&
        !booking.meet_link){
       try{
-        await confirmPaidBooking(bookingId);
+        const retry=await confirmPaidBooking(bookingId);
+        calendarError=retry?.calendarError||null;
         rows=await sql`SELECT id,service,session_name,booking_date,booking_time,
           payment_status,booking_status,meet_link,calendar_event_id
           FROM bookings WHERE id=${bookingId} LIMIT 1`;
@@ -42,7 +44,8 @@ module.exports = async (req,res) => {
       time:String(booking.booking_time).slice(0,5),
       paymentStatus:booking.payment_status,
       bookingStatus:booking.booking_status,
-      meetLink:booking.meet_link||null
+      meetLink:booking.meet_link||null,
+      calendarError
     });
   }catch(err){
     console.error(err);
