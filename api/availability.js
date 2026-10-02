@@ -1,7 +1,8 @@
 const { sql } = require("../lib/db");
-const { SESSIONS, json, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
+const { SESSIONS, json, handleOptions, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
 
 module.exports = async (req,res) => {
+  if(handleOptions(req,res)) return;
   if(req.method!=="GET") return json(res,405,{error:"Method not allowed."});
   try{
     const date=String(req.query?.date||"");
