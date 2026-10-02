@@ -1,0 +1,8 @@
+{
+  "name":"the-unsaid-booking-backend",
+  "private":true,
+  "type":"commonjs",
+  "dependencies":{
+    "@neondatabase/serverless":"^1.0.1"
+  }
+}
