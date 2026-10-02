@@ -1,13 +1,14 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
-const { SESSIONS, json, isValidEmail, clean, toBlocks, validateSlot } = require("../lib/config");
+const { SESSIONS, json, isValidEmail, clean, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
 
 module.exports = async (req,res) => {
   if(req.method !== "POST") return json(res,405,{error:"Method not allowed."});
   try {
     const body=req.body || {};
-    const sessionName=clean(body.session);
-    const meta=SESSIONS[sessionName];
+    const rawSession=clean(body.session);
+    const sessionName=canonicalSession(rawSession);
+    const meta=sessionName ? SESSIONS[sessionName] : null;
     if(!meta) return json(res,400,{error:"Invalid session."});
 
     const customerName=clean(body.name,200);
