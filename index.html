@@ -146,6 +146,7 @@ footer{padding:42px 0 52px;border-top:1px solid var(--line);font-size:13px;color
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+const API_BASE="https://the-unsaid-alpha.vercel.app";
 const BOOKING_SESSIONS={
  "First Conversation — 30 min":{amount:499,service:"emotional"},
  "Deep Conversation — 45 min":{amount:699,service:"emotional"},
@@ -208,7 +209,7 @@ async function loadSlots(dateValue,sessionValue,select){
  if(!dateValue || !sessionValue)return;
  select.innerHTML='<option value="">Loading available times…</option>';
  try{
-   const r=await fetch("/api/availability?date="+encodeURIComponent(dateValue)+"&session="+encodeURIComponent(sessionValue),{headers:{"Accept":"application/json"}});
+   const r=await fetch(API_BASE+"/api/availability?date="+encodeURIComponent(dateValue)+"&session="+encodeURIComponent(sessionValue),{headers:{"Accept":"application/json"}});
    const data=await r.json();
    if(!r.ok)throw new Error(data.error||"Unable to load slots.");
    if(!data.slots?.length){
@@ -254,7 +255,7 @@ async function recoverPendingBooking(bookingId,type){
 
  try{
    for(let i=0;i<24;i++){
-     const r=await fetch("/api/booking-status?bookingId="+encodeURIComponent(bookingId),{
+     const r=await fetch(API_BASE+"/api/booking-status?bookingId="+encodeURIComponent(bookingId),{
        headers:{"Accept":"application/json"},
        cache:"no-store"
      });
@@ -309,7 +310,7 @@ async function startPayment({formData,type}){
  if(!meta)throw new Error("Invalid session selected.");
  submit.disabled=true;submit.textContent="Creating secure booking…";
  try{
-   const orderResponse=await fetch("/api/create-order",{
+   const orderResponse=await fetch(API_BASE+"/api/create-order",{
      method:"POST",
      headers:{"Content-Type":"application/json","Accept":"application/json"},
      body:JSON.stringify(formData)
@@ -349,7 +350,7 @@ async function startPayment({formData,type}){
      }},
      handler:async function(response){
        submit.textContent="Verifying payment…";
-       const vr=await fetch("/api/verify-payment",{
+       const vr=await fetch(API_BASE+"/api/verify-payment",{
          method:"POST",
          headers:{"Content-Type":"application/json","Accept":"application/json"},
          body:JSON.stringify({
