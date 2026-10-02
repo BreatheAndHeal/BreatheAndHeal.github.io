@@ -1,12 +1,13 @@
 const { sql } = require("../lib/db");
-const { SESSIONS, json, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot } = require("../lib/config");
+const { SESSIONS, json, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
 
 module.exports = async (req,res) => {
   if(req.method!=="GET") return json(res,405,{error:"Method not allowed."});
   try{
     const date=String(req.query?.date||"");
-    const sessionName=String(req.query?.session||"");
-    const meta=SESSIONS[sessionName];
+    const rawSession=String(req.query?.session||"");
+    const sessionName=canonicalSession(rawSession);
+    const meta=sessionName ? SESSIONS[sessionName] : null;
     if(!meta) return json(res,400,{error:"Invalid session."});
 
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date))
