@@ -246,6 +246,61 @@ document.querySelectorAll(".astro-choose").forEach(b=>b.addEventListener("click"
 function setStatus(el,msg){el.textContent=msg}
 function showSuccess(box,html){box.innerHTML=html;box.classList.add("show");box.scrollIntoView({behavior:"smooth",block:"nearest"})}
 
+async function recoverPendingBooking(bookingId,type){
+ const isAstro=type==="astrology";
+ const target=isAstro?astrologySuccess:emotionalSuccess;
+ const statusEl=isAstro?astroStatus:status;
+ if(!bookingId)return false;
+
+ try{
+   for(let i=0;i<24;i++){
+     const r=await fetch("/api/booking-status?bookingId="+encodeURIComponent(bookingId),{
+       headers:{"Accept":"application/json"},
+       cache:"no-store"
+     });
+     const data=await r.json();
+
+     if(r.ok && data.ok){
+       const paymentPaid=data.paymentStatus==="paid";
+       const confirmed=data.bookingStatus==="confirmed";
+       const meet=data.meetLink?
+         '<a class="btn secondary" target="_blank" rel="noopener" href="'+data.meetLink+'">Open Google Meet →</a>':"";
+
+       if(paymentPaid || confirmed){
+         const pending=!confirmed || !data.meetLink;
+         showSuccess(target,
+           "<h4>"+(pending?"Payment received — booking reserved ✓":"Booking confirmed ✓")+"</h4>"+
+           "<p><strong>"+data.session+"</strong></p>"+
+           "<p>"+data.date+" · "+prettyTime(data.time)+"</p>"+
+           "<p>Booking ID: "+data.bookingId+"</p>"+
+           (data.meetLink?
+             "<p>Your Google Meet link is ready.</p>":
+             "<p>Your payment is verified and the booking is reserved. The meeting link is being created.</p>")+
+           meet
+         );
+         setStatus(statusEl,pending?
+           "Payment verified. Booking reserved while the meeting link is created.":
+           "Booking confirmed successfully."
+         );
+         try{localStorage.removeItem("theUnsaidPendingBooking")}catch(_){}
+         const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
+         submit.disabled=false;
+         submit.textContent=pending?"Payment received ✓":"Payment complete ✓";
+         return true;
+       }
+     }
+
+     await new Promise(resolve=>setTimeout(resolve,5000));
+   }
+
+   setStatus(statusEl,"Payment status is still being confirmed. Please do not pay again; your booking is being checked.");
+ }catch(err){
+   console.error("booking recovery:",err);
+   setStatus(statusEl,"Payment status is being checked. Please do not pay again.");
+ }
+ return false;
+}
+
 async function startPayment({formData,type}){
  const isAstro=type==="astrology";
  const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
@@ -261,6 +316,15 @@ async function startPayment({formData,type}){
    });
    const order=await orderResponse.json();
    if(!orderResponse.ok)throw new Error(order.error||"Could not start payment.");
+   try{
+     localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({
+       bookingId:order.bookingId,
+       type,
+       session:sessionName,
+       email:formData.email,
+       createdAt:Date.now()
+     }));
+   }catch(_){}
    if(typeof Razorpay==="undefined")throw new Error("Payment checkout could not load. Please try again.");
    const options={
      key:order.keyId,
@@ -276,7 +340,13 @@ async function startPayment({formData,type}){
      },
      notes:{booking_id:order.bookingId},
      theme:{color:"#27312b"},
-     modal:{ondismiss:()=>{submit.disabled=false;submit.textContent="Continue to payment →";setStatus(isAstro?astroStatus:status,"Your slot is held briefly. Complete payment to confirm it.")}},
+     modal:{ondismiss:async()=>{
+       submit.disabled=false;
+       submit.textContent="Checking payment status…";
+       await recoverPendingBooking(order.bookingId,type);
+       if(!submit.textContent.includes("Payment received") && !submit.textContent.includes("Payment complete"))
+         submit.textContent="Continue to payment →";
+     }},
      handler:async function(response){
        submit.textContent="Verifying payment…";
        const vr=await fetch("/api/verify-payment",{
@@ -385,6 +455,24 @@ birthPlaceInput?.addEventListener("input",renderBirthPlaceSuggestions);
 birthPlaceInput?.addEventListener("focus",renderBirthPlaceSuggestions);
 document.addEventListener("click",e=>{if(!e.target.closest(".location-wrap")){birthPlaceSuggestions?.classList.remove("show");birthPlaceInput?.setAttribute("aria-expanded","false")}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape" && birthPlaceSuggestions?.classList.contains("show")){birthPlaceSuggestions.classList.remove("show");birthPlaceInput?.setAttribute("aria-expanded","false")}});
+
+(function(){
+ try{
+   const raw=localStorage.getItem("theUnsaidPendingBooking");
+   if(!raw)return;
+   const pending=JSON.parse(raw);
+   if(!pending?.bookingId || !pending?.type)return;
+   if(Date.now()-Number(pending.createdAt||0)>30*60*1000){
+     localStorage.removeItem("theUnsaidPendingBooking");
+     return;
+   }
+   const selector=pending.type==="astrology"
+     ? '[data-service="astrology"]'
+     : '[data-service="emotional"]';
+   document.querySelector(selector)?.click();
+   recoverPendingBooking(pending.bookingId,pending.type);
+ }catch(err){console.error("pending booking recovery:",err)}
+})();
 
 document.getElementById("checkinForm").addEventListener("submit",e=>{
  e.preventDefault();
