@@ -270,6 +270,13 @@ document.querySelectorAll(".astro-choose").forEach(b=>b.addEventListener("click"
 }));
 
 function setStatus(el,msg){el.textContent=msg}
+function safeMeetUrl(value){
+ try{
+   const u=new URL(String(value||""));
+   if(u.protocol!=="https:" || u.hostname!=="meet.google.com") return "";
+   return u.toString();
+ }catch(_){ return ""; }
+}
 function showSuccess(box,html){box.innerHTML=html;box.classList.add("show");box.scrollIntoView({behavior:"smooth",block:"nearest"})}
 
 async function recoverPendingBooking(bookingId,type){
@@ -294,8 +301,9 @@ async function recoverPendingBooking(bookingId,type){
      if(r.ok && data.ok){
        const paymentPaid=data.paymentStatus==="paid";
        const confirmed=data.bookingStatus==="confirmed";
-       const meet=data.meetLink?
-         '<a class="btn secondary" target="_blank" rel="noopener" href="'+data.meetLink+'">Open Google Meet →</a>':"";
+       const meetUrl=safeMeetUrl(data.meetLink);
+       const meet=meetUrl?
+         '<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
 
        if(paymentPaid || confirmed){
          const pending=!confirmed || !data.meetLink;
@@ -407,7 +415,8 @@ async function startPayment({formData,type}){
        const verified=await vr.json();
        if(!vr.ok || !verified.ok)throw new Error(verified.error||"Payment verification failed.");
        const target=isAstro?astrologySuccess:emotionalSuccess;
-       const meet=verified.meetLink?'<a class="btn secondary" target="_blank" rel="noopener" href="'+verified.meetLink+'">Open Google Meet →</a>':"";
+       const meetUrl=safeMeetUrl(verified.meetLink);
+       const meet=meetUrl?'<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
        const pending=Boolean(verified.pending || verified.calendarPending);
        showSuccess(target,
          "<h4>"+(pending?"Payment received — booking reserved ✓":"Booking confirmed ✓")+"</h4>"+
