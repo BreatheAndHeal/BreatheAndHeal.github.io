@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
-const { SESSIONS, json, handleOptions } = require("../lib/config");
+const { SESSIONS, json, handleOptions, isValidISODate, isValidHHMM } = require("../lib/config");
 const { confirmPaidBooking } = require("../lib/confirm-booking");
 const { allowRequest } = require("../lib/rate-limit");
 
@@ -37,8 +37,19 @@ module.exports = async (req,res) => {
     const rows=await sql`SELECT * FROM bookings WHERE id=${bookingId} LIMIT 1`;
     const booking=rows[0];
     if(!booking) return json(res,404,{error:"Booking not found."});
+    if(!isValidISODate(String(booking.booking_date).slice(0,10)) || !isValidHHMM(String(booking.booking_time).slice(0,5)))
+      return json(res,409,{error:"This booking has an invalid slot. Please contact support."});
     if(booking.razorpay_order_id !== razorpay_order_id)
       return json(res,400,{error:"Payment order mismatch."});
+    if(booking.booking_status==="paid_slot_conflict"){
+      return json(res,200,{
+        ok:true, pending:false, slotConflict:true, bookingId,
+        service:booking.service, session:booking.session_name,
+        date:String(booking.booking_date).slice(0,10),
+        time:String(booking.booking_time).slice(0,5), meetLink:null,
+        message:"Payment was already verified for a slot that became unavailable. Please do not pay again; contact support."
+      });
+    }
 
     const keySecret=process.env.RAZORPAY_KEY_SECRET;
     if(!keySecret) return json(res,500,{error:"Payment verification is not configured."});
@@ -103,10 +114,13 @@ module.exports = async (req,res) => {
       date:String(current.booking_date).slice(0,10),
       time:String(current.booking_time).slice(0,5),
       meetLink:confirmation.meetLink||current.meet_link||null,
-      calendarPending:!confirmation.confirmed,
-      message:confirmation.confirmed
-        ? "Payment verified and booking confirmed."
-        : "Payment verified. Your booking is reserved, and the Google Meet link is still being created."
+      calendarPending:!confirmation.confirmed && !confirmation.slotConflict,
+      slotConflict:Boolean(confirmation.slotConflict),
+      message:confirmation.slotConflict
+        ? "Payment was verified, but the selected slot became unavailable before confirmation. Please do not pay again; contact support."
+        : confirmation.confirmed
+          ? "Payment verified and booking confirmed."
+          : "Payment verified. Your booking is reserved, and the Google Meet link is still being created."
     });
   }catch(err){
     console.error(err);
