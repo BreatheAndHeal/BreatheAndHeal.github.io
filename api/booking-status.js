@@ -1,19 +1,19 @@
 const { sql } = require("../lib/db");
-const { handleOptions } = require("../lib/config");
+const { handleOptions, json } = require("../lib/config");
 const { confirmPaidBooking } = require("../lib/confirm-booking");
 const { verifyBookingAccessToken } = require("../lib/booking-access");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
-  if(req.method!=="GET") return res.status(405).json({error:"Method not allowed."});
+  if(req.method!=="GET") return json(res,405,{error:"Method not allowed."});
 
   try{
     const bookingId=String(req.query?.bookingId||"").trim();
-    if(!bookingId) return res.status(400).json({error:"Missing bookingId."});
+    if(!bookingId) return json(res,400,{error:"Missing bookingId."});
 
     const accessToken=String(req.headers["x-booking-access-token"]||"");
     if(!verifyBookingAccessToken(bookingId,accessToken)){
-      return res.status(401).json({error:"Booking access is not authorized."});
+      return json(res,401,{error:"Booking access is not authorized."});
     }
 
     let rows=await sql`SELECT id,service,session_name,booking_date,booking_time,
@@ -22,7 +22,7 @@ module.exports = async (req,res) => {
     let calendarError=null;
 
     let booking=rows[0];
-    if(!booking) return res.status(404).json({error:"Booking not found."});
+    if(!booking) return json(res,404,{error:"Booking not found."});
 
     if(booking.payment_status==="paid" &&
        (booking.booking_status==="paid_pending_confirmation" || booking.booking_status==="calendar_processing") &&
@@ -39,9 +39,7 @@ module.exports = async (req,res) => {
       }
     }
 
-    res.setHeader("Access-Control-Allow-Origin","https://breatheandheal.github.io");
-    res.setHeader("Vary","Origin");
-    return res.status(200).json({
+    return json(res,200,{
       ok:true,
       bookingId:booking.id,
       service:booking.service,
@@ -55,6 +53,6 @@ module.exports = async (req,res) => {
     });
   }catch(err){
     console.error(err);
-    return res.status(500).json({error:"Could not check booking status."});
+    return json(res,500,{error:"Could not check booking status."});
   }
 };
