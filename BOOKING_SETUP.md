@@ -14,7 +14,7 @@ This repository contains the public GitHub Pages site plus Vercel serverless end
 - GOOGLE_CALENDAR_ID (use `primary` for the connected Google account)
 - BOOKING_TIMEZONE=Asia/Kolkata
 - WORK_START_HOUR=10
-- WORK_END_HOUR=20
+- WORK_END_HOUR=22
 - SLOT_INTERVAL_MINUTES=30
 - MIN_LEAD_MINUTES=60
 - WORK_DAYS=1,2,3,4,5,6
@@ -39,4 +39,4 @@ Create an OAuth client with Calendar access and store the resulting refresh toke
 
 ## Default availability
 
-Monday-Saturday, 10:00 AM-8:00 PM, with 30-minute start intervals and a 60-minute minimum lead time. These values are environment variables and can be changed without editing the code.
+Monday-Saturday, 10:00 AM-10:00 PM, with 30-minute start intervals and a 60-minute minimum lead time. These values are environment variables and can be changed without editing the code.
