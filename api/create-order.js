@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
-const { SESSIONS, json, handleOptions, isValidEmail, clean, toBlocks, validateSlot, canonicalSession, WORK_START, WORK_END } = require("../lib/config");
+const { SESSIONS, json, handleOptions, isValidEmail, isValidHHMM, isValidISODate, clean, toBlocks, validateSlot, canonicalSession, WORK_START, WORK_END } = require("../lib/config");
 const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
@@ -25,11 +25,13 @@ module.exports = async (req,res) => {
     const birthDate=clean(body.birthDate,10);
     const birthTime=clean(body.birthTime,5);
     const birthPlace=clean(body.birthPlace,200);
-    if(!customerName || !isValidEmail(email) || !whatsapp || !date || !time)
-      return json(res,400,{error:"Please complete all required booking details."});
+    if(!customerName || !isValidEmail(email) || !whatsapp || !date || !time || !isValidISODate(date) || !isValidHHMM(time))
+      return json(res,400,{error:"Please complete all required booking details with valid date and time."});
+    if(!/^[+()\d\s-]{7,25}$/.test(whatsapp))
+      return json(res,400,{error:"Please enter a valid WhatsApp/phone number."});
 
     if(meta.service==="astrology"){
-      if(!birthDate || !isValidISODate(birthDate) || !/^\d{2}:\d{2}$/.test(birthTime) || !birthPlace){
+      if(!birthDate || !isValidISODate(birthDate) || !isValidHHMM(birthTime) || !birthPlace){
         return json(res,400,{error:"Please provide a valid birth date, exact birth time and birth place."});
       }
     }
@@ -47,7 +49,9 @@ module.exports = async (req,res) => {
         workStart:WORK_START,
         workEnd:WORK_END
       });
-      if((remote.blockedSlots||[]).includes(time)){
+      const blocked=new Set((remote.blockedSlots||[]).map(String));
+      const blocks=toBlocks(time,meta.duration).map(v=>v.slice(0,5));
+      if(blocks.some(block=>blocked.has(block))){
         return json(res,409,{error:"That time is no longer available. Please choose another slot."});
       }
     }catch(err){
