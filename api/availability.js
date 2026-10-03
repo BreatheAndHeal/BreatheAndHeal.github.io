@@ -1,10 +1,13 @@
 const { sql } = require("../lib/db");
 const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { SESSIONS, json, handleOptions, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
+const { allowRequest } = require("../lib/rate-limit");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
   if(req.method!=="GET") return json(res,405,{error:"Method not allowed."});
+  if(!allowRequest(req,"availability",120,60*1000))
+    return json(res,429,{error:"Too many availability requests. Please wait a moment."});
   try{
     const date=String(req.query?.date||"");
     const rawSession=String(req.query?.session||"");
