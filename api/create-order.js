@@ -3,10 +3,13 @@ const { sql } = require("../lib/db");
 const { SESSIONS, json, handleOptions, isValidEmail, clean, toBlocks, validateSlot, canonicalSession, WORK_START, WORK_END } = require("../lib/config");
 const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
+const { allowRequest } = require("../lib/rate-limit");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
   if(req.method !== "POST") return json(res,405,{error:"Method not allowed."});
+  if(!allowRequest(req,"create-order",12,10*60*1000))
+    return json(res,429,{error:"Too many booking attempts. Please wait a little and try again."});
   try {
     const body=req.body || {};
     const rawSession=clean(body.session);
@@ -19,8 +22,17 @@ module.exports = async (req,res) => {
     const whatsapp=clean(body.whatsapp,50);
     const date=clean(body.date,10);
     const time=clean(body.time,5);
+    const birthDate=clean(body.birthDate,10);
+    const birthTime=clean(body.birthTime,5);
+    const birthPlace=clean(body.birthPlace,200);
     if(!customerName || !isValidEmail(email) || !whatsapp || !date || !time)
       return json(res,400,{error:"Please complete all required booking details."});
+
+    if(meta.service==="astrology"){
+      if(!birthDate || !isValidISODate(birthDate) || !/^\\d{2}:\\d{2}$/.test(birthTime) || !birthPlace){
+        return json(res,400,{error:"Please provide a valid birth date, exact birth time and birth place."});
+      }
+    }
 
     const slotError=validateSlot(date,time,meta.duration);
     if(slotError) return json(res,400,{error:slotError});
@@ -56,7 +68,7 @@ module.exports = async (req,res) => {
       VALUES
       (${bookingId},${meta.service},${sessionName},${meta.amount},${meta.duration},${customerName},${email},${whatsapp},
        ${date},${time},${clean(body.language,30)},${clean(body.concern,100)},${clean(body.message,5000)},
-       ${body.birthDate||null},${body.birthTime||null},${clean(body.birthPlace,200)},
+       ${birthDate||null},${birthTime||null},${birthPlace||null},
        'created','pending',${expiresAt})`;
 
     try {
