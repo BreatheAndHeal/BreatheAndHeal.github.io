@@ -6,6 +6,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="The Unsaid is a private online space for emotional guidance, honest conversations and Vedic astrology guidance.">
 <meta name="robots" content="index,follow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <meta name="google-site-verification" content="RwH-iOLWgNU559l7vqnCDXPYzUP5z0D0Sg7wzU43Djw" />
 <link rel="canonical" href="https://breatheandheal.github.io/">
 <meta property="og:title" content="The Unsaid | For everything you never knew how to say.">
@@ -283,6 +285,7 @@ function escapeHtml(value){
  }[ch]));
 }
 function showSuccess(box,html){box.innerHTML=html;box.classList.add("show");box.scrollIntoView({behavior:"smooth",block:"nearest"})}
+function supportMessage(){return "healing2411@gmail.com · 7905806974"}
 
 async function recoverPendingBooking(bookingId,type){
  const isAstro=type==="astrology";
@@ -304,6 +307,24 @@ async function recoverPendingBooking(bookingId,type){
      const data=await r.json();
 
      if(r.ok && data.ok){
+       if(data.slotConflict){
+         showSuccess(target,
+           "<h4>Payment received · slot needs rescheduling</h4>"+
+           "<p><strong>"+escapeHtml(data.session)+"</strong></p>"+
+           "<p>"+escapeHtml(data.date)+" · "+escapeHtml(prettyTime(data.time))+"</p>"+
+           "<p>Your payment was verified, but the selected time became unavailable before confirmation. Please do not pay again.</p>"+
+           "<p>Contact support: "+escapeHtml(supportMessage())+"</p>"
+         );
+         setStatus(statusEl,"Payment verified. Please do not pay again. Contact support for rescheduling/refund.");
+         try{
+           localStorage.removeItem("theUnsaidPendingBooking");
+           sessionStorage.removeItem("theUnsaidBookingAccessToken_"+data.bookingId);
+         }catch(_){}
+         const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
+         submit.disabled=false;
+         submit.textContent="Payment received ✓";
+         return true;
+       }
        const paymentPaid=data.paymentStatus==="paid";
        const confirmed=data.bookingStatus==="confirmed";
        const meetUrl=safeMeetUrl(data.meetLink);
@@ -423,6 +444,22 @@ async function startPayment({formData,type}){
        const meetUrl=safeMeetUrl(verified.meetLink);
        const meet=meetUrl?'<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
        const pending=Boolean(verified.pending || verified.calendarPending);
+       if(verified.slotConflict){
+         showSuccess(target,
+           "<h4>Payment received · slot needs rescheduling</h4>"+
+           "<p><strong>"+escapeHtml(verified.session)+"</strong></p>"+
+           "<p>"+escapeHtml(verified.date)+" · "+escapeHtml(prettyTime(verified.time))+"</p>"+
+           "<p>Your payment was verified, but the selected time became unavailable before confirmation. Please do not pay again.</p>"+
+           "<p>Contact support: "+escapeHtml(supportMessage())+"</p>"
+         );
+         setStatus(isAstro?astroStatus:status,"Payment verified. Please do not pay again. Contact support for rescheduling/refund.");
+         try{
+           localStorage.removeItem("theUnsaidPendingBooking");
+           sessionStorage.removeItem("theUnsaidBookingAccessToken_"+order.bookingId);
+         }catch(_){}
+         submit.disabled=false;submit.textContent="Payment received ✓";
+         return;
+       }
        showSuccess(target,
          "<h4>"+(pending?"Payment received — booking reserved ✓":"Booking confirmed ✓")+"</h4>"+
          "<p><strong>"+escapeHtml(verified.session)+"</strong></p>"+
