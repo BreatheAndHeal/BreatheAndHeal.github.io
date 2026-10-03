@@ -1,4 +1,5 @@
 const { sql } = require("../lib/db");
+const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { SESSIONS, json, handleOptions, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
 
 module.exports = async (req,res) => {
@@ -21,13 +22,23 @@ module.exports = async (req,res) => {
       WHERE slot_date=${date} AND (expires_at IS NULL OR expires_at > NOW())`;
     const locked=new Set(lockedRows.map(r=>String(r.slot_start).slice(0,5)));
 
+    let calendarBlocked=new Set();
+    try{
+      const remote=await getBlockedSlotsFromCalendar({date,durationMinutes:meta.duration,workStart:WORK_START,workEnd:WORK_END});
+      calendarBlocked=new Set(remote.blockedSlots||[]);
+    }catch(err){
+      console.error("calendar availability:",err);
+      // Database slot locks remain the authoritative booking lock. A temporary
+      // calendar availability lookup failure must not break normal browsing.
+    }
+
     const slots=[];
     const requiredBlocks=Math.ceil(meta.duration/SLOT_MINUTES);
     for(let m=WORK_START*60;m+meta.duration<=WORK_END*60;m+=SLOT_MINUTES){
       const start=String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
       const blocks=toBlocks(start,meta.duration);
       if(blocks.length!==requiredBlocks) continue;
-      const free=blocks.every(b=>!locked.has(b.slice(0,5)));
+      const free=blocks.every(b=>!locked.has(b.slice(0,5)) && !calendarBlocked.has(b.slice(0,5)));
       if(free && !validateSlot(date,start,meta.duration)) slots.push(start);
     }
     return json(res,200,{date,slots});
