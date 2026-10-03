@@ -5,6 +5,7 @@ This repository contains the public GitHub Pages site plus Vercel serverless end
 ## Required Vercel environment variables
 
 - RAZORPAY_KEY_ID
+- ALLOWED_ORIGIN=https://breatheandheal.github.io
 - RAZORPAY_KEY_SECRET
 - RAZORPAY_WEBHOOK_SECRET
 - DATABASE_URL
@@ -19,7 +20,7 @@ This repository contains the public GitHub Pages site plus Vercel serverless end
 - MIN_LEAD_MINUTES=60
 - WORK_DAYS=1,2,3,4,5,6
 
-Never put Razorpay secrets or Google refresh tokens in public HTML or GitHub source.
+Never put Razorpay secrets, Google refresh tokens, or the Apps Script secret in public HTML or GitHub source. The public site URL is not a credential. Keep all server-side secrets in Vercel environment variables.
 
 ## Database
 
