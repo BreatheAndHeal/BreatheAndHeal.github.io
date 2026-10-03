@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const { sql } = require("../lib/db");
 const { SESSIONS, json, handleOptions, isValidEmail, clean, toBlocks, validateSlot, canonicalSession, WORK_START, WORK_END } = require("../lib/config");
 const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
+const { createBookingAccessToken } = require("../lib/booking-access");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
@@ -101,6 +102,7 @@ module.exports = async (req,res) => {
 
     return json(res,200,{
       bookingId,
+      accessToken:createBookingAccessToken(bookingId),
       orderId:order.id,
       amount:meta.amount,
       currency:"INR",
