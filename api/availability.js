@@ -22,14 +22,18 @@ module.exports = async (req,res) => {
       WHERE slot_date=${date} AND (expires_at IS NULL OR expires_at > NOW())`;
     const locked=new Set(lockedRows.map(r=>String(r.slot_start).slice(0,5)));
 
-    let calendarBlocked=new Set();
+    let calendarBlocked;
     try{
-      const remote=await getBlockedSlotsFromCalendar({date,durationMinutes:meta.duration,workStart:WORK_START,workEnd:WORK_END});
+      const remote=await getBlockedSlotsFromCalendar({
+        date,
+        durationMinutes:meta.duration,
+        workStart:WORK_START,
+        workEnd:WORK_END
+      });
       calendarBlocked=new Set(remote.blockedSlots||[]);
     }catch(err){
       console.error("calendar availability:",err);
-      // Database slot locks remain the authoritative booking lock. A temporary
-      // calendar availability lookup failure must not break normal browsing.
+      return json(res,503,{error:"Availability is temporarily unavailable. Please try again shortly."});
     }
 
     const slots=[];
