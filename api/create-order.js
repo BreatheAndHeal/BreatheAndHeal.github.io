@@ -39,8 +39,7 @@ module.exports = async (req,res) => {
       }
     }catch(err){
       console.error("calendar precheck:",err);
-      // Do not fail an otherwise valid booking if Calendar availability is
-      // temporarily unreachable; DB locking still prevents double-booking.
+      return json(res,503,{error:"Availability is temporarily unavailable. Please try again shortly."});
     }
 
     // Remove expired holds so slots become reusable.
