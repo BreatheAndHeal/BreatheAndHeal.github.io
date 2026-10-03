@@ -29,7 +29,7 @@ module.exports = async (req,res) => {
       return json(res,400,{error:"Please complete all required booking details."});
 
     if(meta.service==="astrology"){
-      if(!birthDate || !isValidISODate(birthDate) || !/^\\d{2}:\\d{2}$/.test(birthTime) || !birthPlace){
+      if(!birthDate || !isValidISODate(birthDate) || !/^\d{2}:\d{2}$/.test(birthTime) || !birthPlace){
         return json(res,400,{error:"Please provide a valid birth date, exact birth time and birth place."});
       }
     }
