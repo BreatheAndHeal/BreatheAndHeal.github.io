@@ -277,6 +277,11 @@ function safeMeetUrl(value){
    return u.toString();
  }catch(_){ return ""; }
 }
+function escapeHtml(value){
+ return String(value??"").replace(/[&<>"']/g,ch=>({
+   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[ch]));
+}
 function showSuccess(box,html){box.innerHTML=html;box.classList.add("show");box.scrollIntoView({behavior:"smooth",block:"nearest"})}
 
 async function recoverPendingBooking(bookingId,type){
@@ -309,9 +314,9 @@ async function recoverPendingBooking(bookingId,type){
          const pending=!confirmed || !data.meetLink;
          showSuccess(target,
            "<h4>"+(pending?"Payment received — booking reserved ✓":"Booking confirmed ✓")+"</h4>"+
-           "<p><strong>"+data.session+"</strong></p>"+
-           "<p>"+data.date+" · "+prettyTime(data.time)+"</p>"+
-           "<p>Booking ID: "+data.bookingId+"</p>"+
+           "<p><strong>"+escapeHtml(data.session)+"</strong></p>"+
+           "<p>"+escapeHtml(data.date)+" · "+escapeHtml(prettyTime(data.time))+"</p>"+
+           "<p>Booking ID: "+escapeHtml(data.bookingId)+"</p>"+
            (data.meetLink?
              "<p>Your Google Meet link is ready.</p>":
              "<p>Your payment is verified and the booking is reserved. The meeting link is being created.</p>")+
@@ -420,9 +425,9 @@ async function startPayment({formData,type}){
        const pending=Boolean(verified.pending || verified.calendarPending);
        showSuccess(target,
          "<h4>"+(pending?"Payment received — booking reserved ✓":"Booking confirmed ✓")+"</h4>"+
-         "<p><strong>"+verified.session+"</strong></p>"+
-         "<p>"+verified.date+" · "+prettyTime(verified.time)+"</p>"+
-         "<p>Booking ID: "+verified.bookingId+"</p>"+
+         "<p><strong>"+escapeHtml(verified.session)+"</strong></p>"+
+         "<p>"+escapeHtml(verified.date)+" · "+escapeHtml(prettyTime(verified.time))+"</p>"+
+         "<p>Booking ID: "+escapeHtml(verified.bookingId)+"</p>"+
          (verified.meetLink?"<p>Your Google Meet link is ready.</p>":pending?"<p>Your payment is verified and your slot is reserved. The Google Meet link is being created; please keep this booking ID for reference.</p>":"<p>Payment verified successfully.</p>")+meet
        );
        setStatus(isAstro?astroStatus:status,pending?"Payment verified. Booking reserved while the meeting link is created.":"Payment verified successfully.");
