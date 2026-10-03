@@ -274,14 +274,19 @@ function showSuccess(box,html){box.innerHTML=html;box.classList.add("show");box.
 
 async function recoverPendingBooking(bookingId,type){
  const isAstro=type==="astrology";
+ const accessToken=sessionStorage.getItem("theUnsaidBookingAccessToken_"+bookingId)||"";
  const target=isAstro?astrologySuccess:emotionalSuccess;
  const statusEl=isAstro?astroStatus:status;
  if(!bookingId)return false;
 
  try{
    for(let i=0;i<24;i++){
+     if(!accessToken) return false;
      const r=await fetch(API_BASE+"/api/booking-status?bookingId="+encodeURIComponent(bookingId),{
-       headers:{"Accept":"application/json"},
+       headers:{
+         "Accept":"application/json",
+         "X-Booking-Access-Token":accessToken
+       },
        cache:"no-store"
      });
      const data=await r.json();
@@ -313,6 +318,7 @@ async function recoverPendingBooking(bookingId,type){
          try{
            if(!pending){
              localStorage.removeItem("theUnsaidPendingBooking");
+             sessionStorage.removeItem("theUnsaidBookingAccessToken_"+data.bookingId);
            }else{
              localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({
                bookingId:data.bookingId,
@@ -363,6 +369,7 @@ async function startPayment({formData,type}){
        email:formData.email,
        createdAt:Date.now()
      }));
+     sessionStorage.setItem("theUnsaidBookingAccessToken_"+order.bookingId,String(order.accessToken||""));
    }catch(_){}
    if(typeof Razorpay==="undefined")throw new Error("Payment checkout could not load. Please try again.");
    const options={
@@ -411,6 +418,12 @@ async function startPayment({formData,type}){
          (verified.meetLink?"<p>Your Google Meet link is ready.</p>":pending?"<p>Your payment is verified and your slot is reserved. The Google Meet link is being created; please keep this booking ID for reference.</p>":"<p>Payment verified successfully.</p>")+meet
        );
        setStatus(isAstro?astroStatus:status,pending?"Payment verified. Booking reserved while the meeting link is created.":"Payment verified successfully.");
+       if(!pending){
+         try{
+           localStorage.removeItem("theUnsaidPendingBooking");
+           sessionStorage.removeItem("theUnsaidBookingAccessToken_"+order.bookingId);
+         }catch(_){}
+       }
        submit.disabled=false;submit.textContent=pending?"Payment received ✓":"Payment complete ✓";
      }
    };
