@@ -18,6 +18,9 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"The Unsaid","url":"https://breatheandheal.github.io/","description":"A private online space for emotional guidance, listening, personal perspective and Vedic astrology guidance."}
 </script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+ integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+ crossorigin="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +42,7 @@ section{padding:82px 0}.soft{background:var(--paper)}.center{text-align:center}.
 .assess{display:grid;grid-template-columns:.85fr 1.15fr;gap:34px;align-items:start}.assess-panel{background:var(--paper);border:1px solid var(--line);border-radius:30px;padding:30px;box-shadow:var(--shadow)}.q-block{margin-bottom:24px}.q-block h4{margin:0 0 12px;font-size:15px}.choice-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.choice{position:relative}.choice input{position:absolute;opacity:0;pointer-events:none}.choice label{display:block;text-align:center;padding:11px 8px;border:1px solid var(--line);border-radius:13px;background:#faf6ef;font-size:12px;cursor:pointer;transition:.2s}.choice input:checked+label{background:var(--ink);color:#fff;border-color:var(--ink);transform:translateY(-2px)}.result{margin-top:20px;padding:20px;border-radius:18px;background:#eef3eb;border:1px solid #d7e1d4;display:none}.result.show{display:block}.result b{font-family:"Playfair Display",serif;font-size:23px}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}.step{position:relative;padding:28px;border:1px solid var(--line);border-radius:24px;background:var(--paper)}.step-num{font-family:"Playfair Display",serif;font-size:40px;color:var(--sage)}.step b{display:block;margin:8px 0 5px;font-size:17px}.step span{color:var(--muted);font-size:14px}
 .feedback{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}.feedback-card{padding:28px;border:1px solid var(--line);border-radius:24px;background:var(--paper)}.feedback-card .quote-mark{font-family:Georgia,serif;font-size:42px;color:var(--sage2);line-height:1}.feedback-card p{font-family:"Playfair Display",serif;font-size:22px;line-height:1.25}.feedback-card small{color:var(--muted)}.feedback-note{max-width:760px;margin:18px auto 0;color:#7a837c;font-size:12px;text-align:center}
-.book{display:grid;grid-template-columns:.9fr 1.1fr;gap:34px;align-items:start}.book-panel{background:var(--paper);border:1px solid var(--line);border-radius:30px;padding:30px;box-shadow:var(--shadow)}.field{display:grid;gap:7px;margin-bottom:16px}.field label{font-size:13px;font-weight:600}.field input,.field select,.field textarea{font:inherit;border:1px solid #d6d0c5;border-radius:14px;padding:13px 14px;background:#fff}.field textarea{min-height:110px;resize:vertical}.location-wrap{position:relative}.location-suggestions{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 35px rgba(45,52,47,.12);margin-top:5px;max-height:230px;overflow:auto;display:none}.location-suggestions.show{display:block}.location-option{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 13px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer}.location-option:hover,.location-option:focus{background:#f0ece3;outline:none}.location-note{font-size:11px;color:#7b847d;margin-top:6px}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.status{margin-top:12px;font-size:13px;color:#5d6d60}.slot-help{font-size:11px;color:#7b847d;margin-top:-6px}.slot-select:disabled{opacity:.62;cursor:not-allowed}.payment-loading{display:none;text-align:center;margin-top:12px;color:#5d6d60;font-size:13px}.booking-success{display:none;margin-top:18px;padding:20px;border-radius:20px;background:#eef3eb;border:1px solid #d7e1d4}.booking-success.show{display:block}.booking-success h4{margin:0 0 8px;font-family:"Playfair Display",serif;font-size:24px}.booking-success p{margin:5px 0;color:#5d6961}.booking-success a{margin-top:10px}.booking-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.book{display:grid;grid-template-columns:.9fr 1.1fr;gap:34px;align-items:start}.book-panel{background:var(--paper);border:1px solid var(--line);border-radius:30px;padding:30px;box-shadow:var(--shadow)}.field{display:grid;gap:7px;margin-bottom:16px}.field label{font-size:13px;font-weight:600}.field input,.field select,.field textarea{font:inherit;border:1px solid #d6d0c5;border-radius:14px;padding:13px 14px;background:#fff}.field textarea{min-height:110px;resize:vertical}.location-wrap{position:relative}.location-suggestions{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 35px rgba(45,52,47,.12);margin-top:5px;max-height:230px;overflow:auto;display:none}.location-suggestions.show{display:block}.location-option{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 13px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer}.location-option:hover,.location-option:focus{background:#f0ece3;outline:none}.location-note{font-size:11px;color:#7b847d;margin-top:6px}.world-location{display:grid;gap:10px}.world-map{height:260px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#e9eee8}.map-help{font-size:11px;color:#7b847d}.location-suggestions{z-index:1000}.location-option small{display:block;color:#7b847d;font-size:11px;margin-top:2px}.leaflet-control-attribution{font-size:9px}..form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.status{margin-top:12px;font-size:13px;color:#5d6d60}.slot-help{font-size:11px;color:#7b847d;margin-top:-6px}.slot-select:disabled{opacity:.62;cursor:not-allowed}.payment-loading{display:none;text-align:center;margin-top:12px;color:#5d6d60;font-size:13px}.booking-success{display:none;margin-top:18px;padding:20px;border-radius:20px;background:#eef3eb;border:1px solid #d7e1d4}.booking-success.show{display:block}.booking-success h4{margin:0 0 8px;font-family:"Playfair Display",serif;font-size:24px}.booking-success p{margin:5px 0;color:#5d6961}.booking-success a{margin-top:10px}.booking-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .space-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:34px}.space-card{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:28px;padding:32px;transition:.22s;cursor:pointer}.space-card:hover,.space-card.active{transform:translateY(-7px);border-color:#97ab99;box-shadow:0 22px 48px rgba(45,52,47,.10)}.space-card .space-no{font-size:12px;letter-spacing:.12em;color:var(--sage);font-weight:700}.space-card h3{font-family:"Playfair Display",serif;font-size:30px;margin:10px 0 8px}.space-card p{color:var(--muted);font-size:15px}.space-card ul{color:var(--muted);padding-left:18px;font-size:14px}.space-card .btn{margin-top:10px}.astro-intro{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}.astro-panel{background:var(--paper);border:1px solid var(--line);border-radius:30px;padding:30px;box-shadow:var(--shadow)}.astro-panel h3{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px}.astro-panel p{color:var(--muted)}.astro-note{font-size:12px;color:#7a837c;margin-top:18px}.astro-sessions{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}.astro-session{background:var(--paper);border:1px solid var(--line);border-radius:28px;padding:28px;transition:.22s}.astro-session:hover{transform:translateY(-7px);border-color:#97ab99;box-shadow:0 20px 45px rgba(45,52,47,.08)}.astro-session h3{font-family:"Playfair Display",serif;font-size:25px;margin:0 0 6px}.astro-session .price{margin-top:12px}.astro-session p,.astro-session li{color:var(--muted);font-size:14px}.astro-session ul{padding-left:18px;min-height:105px}.service-switch{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}.service-switch button{border:1px solid var(--line);background:#f7f2ea;padding:12px 16px;border-radius:999px;font:inherit;cursor:pointer}.service-switch button.active{background:var(--ink);color:#fff;border-color:var(--ink)}.booking-panel{display:none}.booking-panel.active{display:block}.faq{display:grid;gap:12px;margin-top:28px}.faq details{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px 20px}.faq summary{cursor:pointer;font-weight:600}.faq p{color:var(--muted);font-size:14px}
 footer{padding:42px 0 52px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.footer-links{display:flex;gap:18px;flex-wrap:wrap}
 @media(max-width:950px){.space-grid,.astro-intro{grid-template-columns:1fr}.astro-sessions{grid-template-columns:1fr}.links{display:none}.menu{display:block}.links.open{position:absolute;left:16px;right:16px;top:68px;display:grid;gap:4px;background:var(--paper);padding:14px;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.links.open a{padding:10px}.hero-grid,.journey,.assess,.story,.book{grid-template-columns:1fr}.visual{min-height:430px}.impact-grid{grid-template-columns:repeat(2,1fr)}.cards,.sessions,.steps,.feedback{grid-template-columns:1fr}}
@@ -151,7 +154,7 @@ footer{padding:42px 0 52px;border-top:1px solid var(--line);font-size:13px;color
 <section id="book"><div class="wrap book"><div><p class="kicker">BOOK YOUR SPACE</p><h2 class="section-title">Tell us a little. We'll take it from there.</h2><p class="section-copy">Choose the kind of session you want, share the relevant details and send your request. Your slot is confirmed before payment.</p><p class="section-copy"><strong>Phone:</strong> 7905806974<br><strong>Email:</strong> healing2411@gmail.com</p><div class="booking-links"><a class="btn secondary" href="mailto:healing2411@gmail.com">Email →</a><a class="btn secondary" href="tel:+917905806974">Phone →</a></div></div>
 <div class="book-panel"><div class="service-switch" role="tablist"><button type="button" class="service-tab active" data-service="emotional">Emotional Guidance</button><button type="button" class="service-tab" data-service="astrology">Vedic Astrology</button></div>
 <div class="booking-panel active" id="emotionalPanel"><form id="booking"><div class="field"><label for="session">Session</label><select id="session" required><option value="">Choose a session</option><option>First Conversation — 30 min</option><option>Deep Conversation — 45 min</option><option>Extended Session — 60 min</option></select></div><div class="form-row"><div class="field"><label for="name">Name</label><input id="name" required></div><div class="field"><label for="email">Email</label><input id="email" type="email" required></div></div><div class="form-row"><div class="field"><label for="whatsapp">Phone number</label><input id="whatsapp" type="tel" required></div><div class="field"><label for="date">Choose date</label><input id="date" type="date" required></div></div><div class="form-row"><div class="field"><label for="time">Available time</label><select id="time" class="slot-select" required disabled><option value="">Choose a session and date first</option></select><div class="slot-help">Only currently available slots are shown.</div></div><div class="field"><label for="language">Language</label><select id="language"><option>Hindi</option><option>Hinglish</option><option>English</option></select></div></div><div class="field"><label for="message">What would you like to talk about?</label><textarea id="message" placeholder="You can keep this simple. A few words are enough."></textarea></div><button class="btn primary" id="emotionalSubmit" type="submit" style="width:100%">Continue to payment →</button><p id="status" class="status" aria-live="polite"></p><div id="emotionalSuccess" class="booking-success" aria-live="polite"></div></form></div>
-<div class="booking-panel" id="astrologyPanel"><form id="astrologyBooking"><div class="field"><label for="astroSession">Astrology session</label><select id="astroSession" required><option value="">Choose a reading</option><option>Vedic Insight — 30 min · ₹999</option><option>Deep Vedic Reading — 50 min · ₹1,499</option><option>Complete Vedic Guidance — 70 min · ₹2,199</option></select></div><div class="form-row"><div class="field"><label for="astroName">Name</label><input id="astroName" required></div><div class="field"><label for="astroEmail">Email</label><input id="astroEmail" type="email" required></div></div><div class="form-row"><div class="field"><label for="astroWhatsapp">Phone number</label><input id="astroWhatsapp" type="tel" required></div><div class="field"><label for="astroDate">Preferred date</label><input id="astroDate" type="date" required></div></div><div class="form-row"><div class="field"><label for="birthDate">Birth date</label><input id="birthDate" type="date" required></div><div class="field"><label for="birthTime">Exact birth time</label><input id="birthTime" type="time" required></div></div><div class="field"><label for="birthPlace">Birth place</label><div class="location-wrap"><input id="birthPlace" placeholder="Start typing a city or place…" autocomplete="off" required aria-autocomplete="list" aria-controls="birthPlaceSuggestions" aria-expanded="false"><div id="birthPlaceSuggestions" class="location-suggestions" role="listbox"></div></div><div class="location-note">Start typing and choose the matching place, or enter it manually.</div></div><div class="form-row"><div class="field"><label for="astroTime">Available time</label><select id="astroTime" class="slot-select" required disabled><option value="">Choose a reading and date first</option></select><div class="slot-help">Only currently available slots are shown.</div></div><div class="field"><label for="astroConcern">Main area</label><select id="astroConcern"><option>Career</option><option>Relationship</option><option>Marriage</option><option>Family</option><option>Finances</option><option>Life direction</option><option>Current phase</option><option>Spiritual growth</option><option>Something else</option></select></div></div><div class="field"><label for="astroMessage">What would you like to understand?</label><textarea id="astroMessage" placeholder="Tell us briefly what you want the reading to focus on."></textarea></div><button class="btn primary" id="astrologySubmit" type="submit" style="width:100%">Continue to payment →</button><p id="astroStatus" class="status" aria-live="polite"></p><div id="astrologySuccess" class="booking-success" aria-live="polite"></div></form><p class="astro-note">Birth details are used for the purpose of the requested astrology reading. Please share only the information you are comfortable providing.</p></div>
+<div class="booking-panel" id="astrologyPanel"><form id="astrologyBooking"><div class="field"><label for="astroSession">Astrology session</label><select id="astroSession" required><option value="">Choose a reading</option><option>Vedic Insight — 30 min · ₹999</option><option>Deep Vedic Reading — 50 min · ₹1,499</option><option>Complete Vedic Guidance — 70 min · ₹2,199</option></select></div><div class="form-row"><div class="field"><label for="astroName">Name</label><input id="astroName" required></div><div class="field"><label for="astroEmail">Email</label><input id="astroEmail" type="email" required></div></div><div class="form-row"><div class="field"><label for="astroWhatsapp">Phone number</label><input id="astroWhatsapp" type="tel" required></div><div class="field"><label for="astroDate">Preferred date</label><input id="astroDate" type="date" required></div></div><div class="form-row"><div class="field"><label for="birthDate">Birth date</label><input id="birthDate" type="date" required></div><div class="field"><label for="birthTime">Exact birth time</label><input id="birthTime" type="time" required></div></div><div class="field"><label for="birthPlace">Birth place · worldwide</label><div class="world-location"><div class="location-wrap"><input id="birthPlace" placeholder="Search any city, town or place worldwide…" autocomplete="off" required aria-autocomplete="list" aria-controls="birthPlaceSuggestions" aria-expanded="false"><div id="birthPlaceSuggestions" class="location-suggestions" role="listbox"></div></div><div id="birthPlaceMap" class="world-map" aria-label="Worldwide location map"></div><div class="map-help">Search anywhere in the world, including smaller cities and towns, or pick a point on the map.</div></div></div><div class="form-row"><div class="field"><label for="astroTime">Available time</label><select id="astroTime" class="slot-select" required disabled><option value="">Choose a reading and date first</option></select><div class="slot-help">Only currently available slots are shown.</div></div><div class="field"><label for="astroConcern">Main area</label><select id="astroConcern"><option>Career</option><option>Relationship</option><option>Marriage</option><option>Family</option><option>Finances</option><option>Life direction</option><option>Current phase</option><option>Spiritual growth</option><option>Something else</option></select></div></div><div class="field"><label for="astroMessage">What would you like to understand?</label><textarea id="astroMessage" placeholder="Tell us briefly what you want the reading to focus on."></textarea></div><button class="btn primary" id="astrologySubmit" type="submit" style="width:100%">Continue to payment →</button><p id="astroStatus" class="status" aria-live="polite"></p><div id="astrologySuccess" class="booking-success" aria-live="polite"></div></form><p class="astro-note">Birth details are used for the purpose of the requested astrology reading. Please share only the information you are comfortable providing.</p></div>
 </div></div></section>
 
 <section class="soft" id="faq"><div class="wrap narrow"><div class="center"><p class="kicker">QUESTIONS</p><h2 class="section-title">Before you book.</h2></div><div class="faq">
@@ -472,28 +475,117 @@ document.getElementById("astrologyBooking").addEventListener("submit",e=>{
  });
 });
 
-const BIRTH_PLACES=[
-"Agra, Uttar Pradesh, India","Ahmedabad, Gujarat, India","Ajmer, Rajasthan, India","Aligarh, Uttar Pradesh, India","Allahabad (Prayagraj), Uttar Pradesh, India","Amritsar, Punjab, India","Aurangabad (Chhatrapati Sambhajinagar), Maharashtra, India","Bareilly, Uttar Pradesh, India","Bengaluru, Karnataka, India","Bhopal, Madhya Pradesh, India","Bhubaneswar, Odisha, India","Bikaner, Rajasthan, India","Bilaspur, Chhattisgarh, India","Bokaro, Jharkhand, India","Chandigarh, India","Chennai, Tamil Nadu, India","Coimbatore, Tamil Nadu, India","Cuttack, Odisha, India","Dehradun, Uttarakhand, India","Delhi, India","Dhanbad, Jharkhand, India","Durgapur, West Bengal, India","Faridabad, Haryana, India","Firozabad, Uttar Pradesh, India","Gandhinagar, Gujarat, India","Ghaziabad, Uttar Pradesh, India","Gorakhpur, Uttar Pradesh, India","Gurugram, Haryana, India","Guwahati, Assam, India","Gwalior, Madhya Pradesh, India","Haridwar, Uttarakhand, India","Hisar, Haryana, India","Hubballi, Karnataka, India","Hyderabad, Telangana, India","Indore, Madhya Pradesh, India","Jabalpur, Madhya Pradesh, India","Jaipur, Rajasthan, India","Jalandhar, Punjab, India","Jammu, Jammu & Kashmir, India","Jamshedpur, Jharkhand, India","Jhansi, Uttar Pradesh, India","Jodhpur, Rajasthan, India","Kalyan-Dombivli, Maharashtra, India","Kanpur, Uttar Pradesh, India","Karnal, Haryana, India","Kochi, Kerala, India","Kolhapur, Maharashtra, India","Kolkata, West Bengal, India","Kota, Rajasthan, India","Kozhikode, Kerala, India","Lucknow, Uttar Pradesh, India","Ludhiana, Punjab, India","Madurai, Tamil Nadu, India","Meerut, Uttar Pradesh, India","Moradabad, Uttar Pradesh, India","Mumbai, Maharashtra, India","Mysuru, Karnataka, India","Nagpur, Maharashtra, India","Nashik, Maharashtra, India","Noida, Uttar Pradesh, India","Panipat, Haryana, India","Patna, Bihar, India","Panchkula, Haryana, India","Prayagraj, Uttar Pradesh, India","Pune, Maharashtra, India","Raipur, Chhattisgarh, India","Rajkot, Gujarat, India","Ranchi, Jharkhand, India","Rishikesh, Uttarakhand, India","Rohtak, Haryana, India","Saharanpur, Uttar Pradesh, India","Salem, Tamil Nadu, India","Siliguri, West Bengal, India","Solapur, Maharashtra, India","Srinagar, Jammu & Kashmir, India","Surat, Gujarat, India","Thane, Maharashtra, India","Thiruvananthapuram, Kerala, India","Thrissur, Kerala, India","Tiruchirappalli, Tamil Nadu, India","Udaipur, Rajasthan, India","Ujjain, Madhya Pradesh, India","Vadodara, Gujarat, India","Varanasi, Uttar Pradesh, India","Vasai-Virar, Maharashtra, India","Vijayawada, Andhra Pradesh, India","Visakhapatnam, Andhra Pradesh, India","Warangal, Telangana, India","Almaty, Kazakhstan","Amsterdam, Netherlands","Bangkok, Thailand","Berlin, Germany","Dubai, United Arab Emirates","Hong Kong, China","Jakarta, Indonesia","Kathmandu, Nepal","Kuala Lumpur, Malaysia","London, United Kingdom","Melbourne, Australia","New York, USA","Paris, France","Riyadh, Saudi Arabia","Singapore, Singapore","Sydney, Australia","Toronto, Canada","Tokyo, Japan","Vancouver, Canada"
-];
-const birthPlaceInput=document.getElementById("birthPlace"),birthPlaceSuggestions=document.getElementById("birthPlaceSuggestions");
-function renderBirthPlaceSuggestions(){
- const q=birthPlaceInput.value.trim().toLowerCase();
+const birthPlaceInput=document.getElementById("birthPlace"),birthPlaceSuggestions=document.getElementById("birthPlaceSuggestions"),birthPlaceMapEl=document.getElementById("birthPlaceMap");
+let birthPlaceMap=null,birthPlaceMarker=null,locationSearchTimer=null,lastLocationQuery="";
+const GEO_URL="https://geocoding-api.open-meteo.com/v1/search";
+
+function prettyLocation(item){
+ const parts=[item.name,item.admin3,item.admin2,item.admin1,item.country].filter(Boolean);
+ return [...new Set(parts)].join(", ");
+}
+function clearLocationSuggestions(){
  birthPlaceSuggestions.innerHTML="";
- if(q.length<2){birthPlaceSuggestions.classList.remove("show");birthPlaceInput.setAttribute("aria-expanded","false");return}
- const matches=BIRTH_PLACES.filter(x=>x.toLowerCase().includes(q)).slice(0,8);
- if(!matches.length){birthPlaceSuggestions.classList.remove("show");birthPlaceInput.setAttribute("aria-expanded","false");return}
- matches.forEach(place=>{
+ birthPlaceSuggestions.classList.remove("show");
+ birthPlaceInput?.setAttribute("aria-expanded","false");
+}
+function selectBirthPlace(item,zoom=8){
+ const label=prettyLocation(item);
+ birthPlaceInput.value=label;
+ birthPlaceInput.dataset.lat=String(item.latitude);
+ birthPlaceInput.dataset.lon=String(item.longitude);
+ birthPlaceInput.dataset.country=item.country||"";
+ clearLocationSuggestions();
+ if(birthPlaceMap){
+   birthPlaceMap.setView([Number(item.latitude),Number(item.longitude)],zoom,{animate:true});
+   if(birthPlaceMarker) birthPlaceMarker.setLatLng([Number(item.latitude),Number(item.longitude)]);
+   else birthPlaceMarker=L.marker([Number(item.latitude),Number(item.longitude)]).addTo(birthPlaceMap);
+   birthPlaceMarker.bindPopup(label).openPopup();
+ }
+}
+function renderGlobalSuggestions(results){
+ birthPlaceSuggestions.innerHTML="";
+ if(!results?.length){clearLocationSuggestions();return}
+ results.slice(0,10).forEach(item=>{
    const btn=document.createElement("button");
-   btn.type="button";btn.className="location-option";btn.setAttribute("role","option");btn.textContent=place;
-   btn.addEventListener("click",()=>{birthPlaceInput.value=place;birthPlaceSuggestions.classList.remove("show");birthPlaceInput.setAttribute("aria-expanded","false");});
+   btn.type="button";
+   btn.className="location-option";
+   btn.setAttribute("role","option");
+   btn.innerHTML=document.createElement("div").textContent=prettyLocation(item).replace(/</g,"&lt;"); 
+   const sub=document.createElement("small");
+   sub.textContent=(item.feature_code||"Place")+" · "+Number(item.latitude).toFixed(2)+", "+Number(item.longitude).toFixed(2);
+   btn.appendChild(sub);
+   btn.addEventListener("click",()=>selectBirthPlace(item,10));
    birthPlaceSuggestions.appendChild(btn);
  });
- birthPlaceSuggestions.classList.add("show");birthPlaceInput.setAttribute("aria-expanded","true");
+ birthPlaceSuggestions.classList.add("show");
+ birthPlaceInput.setAttribute("aria-expanded","true");
 }
-birthPlaceInput?.addEventListener("input",renderBirthPlaceSuggestions);
-birthPlaceInput?.addEventListener("focus",renderBirthPlaceSuggestions);
-document.addEventListener("click",e=>{if(!e.target.closest(".location-wrap")){birthPlaceSuggestions?.classList.remove("show");birthPlaceInput?.setAttribute("aria-expanded","false")}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape" && birthPlaceSuggestions?.classList.contains("show")){birthPlaceSuggestions.classList.remove("show");birthPlaceInput?.setAttribute("aria-expanded","false")}});
+async function searchWorldwideLocations(query){
+ const q=query.trim();
+ if(q.length<2){clearLocationSuggestions();return}
+ lastLocationQuery=q;
+ try{
+   const url=GEO_URL+"?name="+encodeURIComponent(q)+"&count=20&language=en&format=json";
+   const r=await fetch(url,{headers:{"Accept":"application/json"}});
+   if(!r.ok)throw new Error("Worldwide location search failed.");
+   const data=await r.json();
+   if(q!==lastLocationQuery)return;
+   renderGlobalSuggestions(data.results||[]);
+ }catch(err){
+   console.error("worldwide location search:",err);
+   clearLocationSuggestions();
+ }
+}
+function initBirthPlaceMap(){
+ if(!birthPlaceMapEl || typeof L==="undefined")return;
+ birthPlaceMap=L.map("birthPlaceMap",{worldCopyJump:true,scrollWheelZoom:true,zoomControl:true}).setView([20,0],2);
+ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
+   maxZoom:19,
+   attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+ }).addTo(birthPlaceMap);
+ birthPlaceMap.on("click",async e=>{
+   const lat=e.latlng.lat,lon=e.latlng.lng;
+   if(birthPlaceMarker)birthPlaceMarker.setLatLng([lat,lon]);
+   else birthPlaceMarker=L.marker([lat,lon]).addTo(birthPlaceMap);
+   birthPlaceMarker.bindPopup("Looking up this location…").openPopup();
+   try{
+     const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+encodeURIComponent(lat)+"&lon="+encodeURIComponent(lon)+"&zoom=10&addressdetails=1";
+     const r=await fetch(url,{headers:{"Accept":"application/json"}});
+     if(!r.ok)throw new Error("Reverse geocoding failed.");
+     const data=await r.json();
+     const a=data.address||{};
+     const label=[a.city||a.town||a.village||a.municipality||a.county,a.state,a.country].filter(Boolean).join(", ") || data.display_name;
+     birthPlaceInput.value=label;
+     birthPlaceInput.dataset.lat=String(lat);
+     birthPlaceInput.dataset.lon=String(lon);
+     birthPlaceInput.dataset.country=a.country||"";
+     birthPlaceMarker.bindPopup(label).openPopup();
+     clearLocationSuggestions();
+   }catch(err){
+     console.error("map reverse geocoding:",err);
+     birthPlaceInput.value="Selected map location ("+lat.toFixed(4)+", "+lon.toFixed(4)+")";
+     birthPlaceInput.dataset.lat=String(lat);
+     birthPlaceInput.dataset.lon=String(lon);
+     birthPlaceMarker.bindPopup("Selected location").openPopup();
+   }
+ });
+}
+birthPlaceInput?.addEventListener("input",()=>{
+ clearTimeout(locationSearchTimer);
+ const q=birthPlaceInput.value.trim();
+ if(q.length<2){clearLocationSuggestions();return}
+ locationSearchTimer=setTimeout(()=>searchWorldwideLocations(q),450);
+});
+birthPlaceInput?.addEventListener("focus",()=>{
+ if(birthPlaceInput.value.trim().length>=2)searchWorldwideLocations(birthPlaceInput.value.trim());
+});
+document.addEventListener("click",e=>{
+ if(!e.target.closest(".location-wrap"))clearLocationSuggestions();
+});
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape" && birthPlaceSuggestions?.classList.contains("show"))clearLocationSuggestions();
+});
+initBirthPlaceMap();
 
 (function(){
  try{
