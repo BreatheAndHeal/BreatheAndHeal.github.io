@@ -366,7 +366,6 @@ async function startPayment({formData,type}){
        bookingId:order.bookingId,
        type,
        session:sessionName,
-       email:formData.email,
        createdAt:Date.now()
      }));
      sessionStorage.setItem("theUnsaidBookingAccessToken_"+order.bookingId,String(order.accessToken||""));
