@@ -41,6 +41,15 @@ module.exports = async (req,res) => {
       return json(res,409,{error:"This booking has an invalid slot. Please contact support."});
     if(booking.razorpay_order_id !== razorpay_order_id)
       return json(res,400,{error:"Payment order mismatch."});
+    const keySecret=process.env.RAZORPAY_KEY_SECRET;
+    if(!keySecret) return json(res,500,{error:"Payment verification is not configured."});
+
+    const expected=crypto.createHmac("sha256",keySecret)
+      .update(razorpay_order_id+"|"+razorpay_payment_id)
+      .digest("hex");
+    if(!safeEqualHex(expected,razorpay_signature))
+      return json(res,400,{error:"Payment verification failed."});
+
     if(booking.booking_status==="paid_slot_conflict"){
       return json(res,200,{
         ok:true, pending:false, slotConflict:true, bookingId,
@@ -50,15 +59,6 @@ module.exports = async (req,res) => {
         message:"Payment was already verified for a slot that became unavailable. Please do not pay again; contact support."
       });
     }
-
-    const keySecret=process.env.RAZORPAY_KEY_SECRET;
-    if(!keySecret) return json(res,500,{error:"Payment verification is not configured."});
-
-    const expected=crypto.createHmac("sha256",keySecret)
-      .update(razorpay_order_id+"|"+razorpay_payment_id)
-      .digest("hex");
-    if(!safeEqualHex(expected,razorpay_signature))
-      return json(res,400,{error:"Payment verification failed."});
 
     if(booking.booking_status==="confirmed" && booking.razorpay_payment_id===razorpay_payment_id)
       return json(res,200,{
