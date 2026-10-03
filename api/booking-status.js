@@ -1,6 +1,7 @@
 const { sql } = require("../lib/db");
 const { handleOptions } = require("../lib/config");
 const { confirmPaidBooking } = require("../lib/confirm-booking");
+const { verifyBookingAccessToken } = require("../lib/booking-access");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
@@ -9,6 +10,11 @@ module.exports = async (req,res) => {
   try{
     const bookingId=String(req.query?.bookingId||"").trim();
     if(!bookingId) return res.status(400).json({error:"Missing bookingId."});
+
+    const accessToken=String(req.headers["x-booking-access-token"]||"");
+    if(!verifyBookingAccessToken(bookingId,accessToken)){
+      return res.status(401).json({error:"Booking access is not authorized."});
+    }
 
     let rows=await sql`SELECT id,service,session_name,booking_date,booking_time,
       payment_status,booking_status,meet_link,calendar_event_id
