@@ -48,6 +48,7 @@ module.exports = async (req,res) => {
       time:String(booking.booking_time).slice(0,5),
       paymentStatus:booking.payment_status,
       bookingStatus:booking.booking_status,
+      slotConflict:booking.booking_status==="paid_slot_conflict",
       meetLink:booking.meet_link||null,
       calendarError
     });
