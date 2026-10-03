@@ -173,6 +173,9 @@ footer{padding:42px 0 52px;border-top:1px solid var(--line);font-size:13px;color
 <div class="modal-backdrop" id="topicModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><button class="modal-close" id="modalClose" aria-label="Close">×</button><div class="mini">A PLACE TO START</div><h3 id="modalTitle"></h3><p id="modalDesc"></p><a class="btn primary" href="#book" id="modalBook">Talk about this →</a></div></div>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+ integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+ crossorigin=""></script>
 <script>
 const API_BASE="https://the-unsaid-alpha.vercel.app";
 const BOOKING_SESSIONS={
@@ -510,7 +513,9 @@ function renderGlobalSuggestions(results){
    btn.type="button";
    btn.className="location-option";
    btn.setAttribute("role","option");
-   btn.innerHTML=document.createElement("div").textContent=prettyLocation(item).replace(/</g,"&lt;"); 
+   const title=document.createElement("div");
+   title.textContent=prettyLocation(item);
+   btn.appendChild(title);
    const sub=document.createElement("small");
    sub.textContent=(item.feature_code||"Place")+" · "+Number(item.latitude).toFixed(2)+", "+Number(item.longitude).toFixed(2);
    btn.appendChild(sub);
