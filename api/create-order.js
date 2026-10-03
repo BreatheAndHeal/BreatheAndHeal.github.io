@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
-const { SESSIONS, json, handleOptions, isValidEmail, clean, toBlocks, validateSlot, canonicalSession } = require("../lib/config");
+const { SESSIONS, json, handleOptions, isValidEmail, clean, toBlocks, validateSlot, canonicalSession, WORK_START, WORK_END } = require("../lib/config");
+const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
@@ -22,6 +23,25 @@ module.exports = async (req,res) => {
 
     const slotError=validateSlot(date,time,meta.duration);
     if(slotError) return json(res,400,{error:slotError});
+
+    // Recheck the provider's Google Calendar immediately before creating the
+    // payment order. This prevents an emergency/unavailable calendar event
+    // added after the availability screen was loaded from becoming bookable.
+    try{
+      const remote=await getBlockedSlotsFromCalendar({
+        date,
+        durationMinutes:meta.duration,
+        workStart:WORK_START,
+        workEnd:WORK_END
+      });
+      if((remote.blockedSlots||[]).includes(time)){
+        return json(res,409,{error:"That time is no longer available. Please choose another slot."});
+      }
+    }catch(err){
+      console.error("calendar precheck:",err);
+      // Do not fail an otherwise valid booking if Calendar availability is
+      // temporarily unreachable; DB locking still prevents double-booking.
+    }
 
     // Remove expired holds so slots become reusable.
     await sql`DELETE FROM slot_locks WHERE expires_at IS NOT NULL AND expires_at < NOW()`;
