@@ -1,0 +1,4 @@
+Contact: mailto:healing2411@gmail.com
+Expires: 2027-10-03T00:00:00Z
+Preferred-Languages: en, hi
+Canonical: https://breatheandheal.github.io/.well-known/security.txt
