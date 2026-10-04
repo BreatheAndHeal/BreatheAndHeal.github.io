@@ -626,6 +626,20 @@ document.addEventListener("keydown",e=>{
  }catch(err){console.error("pending booking recovery:",err)}
 })();
 
+// Allow a selected check-in answer to be cleared by tapping it again.
+document.querySelectorAll('#checkinForm input[type="radio"]').forEach(input=>{
+ input.addEventListener("click",()=>{
+   const wasSelected=input.dataset.wasSelected==="true";
+   document.querySelectorAll('#checkinForm input[name="'+input.name+'"]').forEach(r=>r.dataset.wasSelected="false");
+   if(wasSelected){
+     input.checked=false;
+     input.dataset.wasSelected="false";
+   }else{
+     input.dataset.wasSelected="true";
+   }
+ });
+});
+
 document.getElementById("checkinForm").addEventListener("submit",e=>{
  e.preventDefault();
  let total=0;
