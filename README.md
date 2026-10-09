@@ -4,7 +4,8 @@ A calm, private online space for honest conversations, emotional support and per
 
 ## Current launch checklist
 - Real WhatsApp/phone: 7905806974
-- Real email: healing2411@gmail.com
+- Primary email: tatttvamasii@gmail.com
+- Alternate email: healing2411@gmail.com
 - GitHub Pages source: main / root
 - SEO discovery: robots.txt + sitemap.xml
 - Booking: live slot booking, Razorpay payment verification, Calendar/Meet confirmation and email notifications
