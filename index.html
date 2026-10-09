@@ -60,6 +60,17 @@ header{background:rgba(246,241,232,.92);border-bottom-color:var(--line)}
 .topic-hint,.chart-note,.feedback-note,.astro-note{color:var(--muted)}
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
 .topic:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
+
+/* Compact trust strip for the homepage flow */
+.promise-strip{padding:18px 0;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.promise-items{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;align-items:center}
+.promise-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 8px;text-align:center}
+.promise-item strong{font-size:14px;color:var(--ink);font-weight:700}
+.promise-item span{font-size:12px;line-height:1.45;color:var(--muted)}
+.session-expect.single{grid-template-columns:minmax(0,1fr);max-width:900px;margin-left:auto;margin-right:auto}
+@media(max-width:950px){.promise-items{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+@media(max-width:560px){.promise-strip{padding:14px 0}.promise-items{gap:10px 8px}.promise-item{padding:4px 2px}.promise-item strong{font-size:13px}.promise-item span{font-size:11px}}
+
 </style>
 </head>
 <body>
@@ -75,14 +86,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <h1>Some things become lighter<br><em>the moment they are finally spoken.</em></h1>
 <p class="hero-tagline">For everything you never knew how to say.</p>
 <p class="lead">A calm, private space to talk openly, feel heard, untangle what you're feeling, and find a little clarity when life feels heavy.</p>
-<div class="actions"><a class="btn primary" href="#book">Book a private session →</a><a class="btn secondary" href="#checkin">Take a 2-minute check-in</a></div>
-<div class="trust"><span>Private 1-to-1</span><span>Hindi · Hinglish · English</span><span>Online</span><span>Online booking</span></div>
+<div class="actions"><a class="btn primary" href="#sessions">Explore sessions &amp; prices →</a><a class="btn secondary" href="#checkin">Take a 2-minute check-in</a></div>
 </div>
 <div class="visual"><div class="room"><div class="window"></div><div class="sun"></div><div class="chair"><span class="back"></span><span class="seat"></span><span class="leg l1"></span><span class="leg l2"></span></div><div class="plant"><span class="leaf a"></span><span class="leaf b"></span><span class="leaf c"></span><span class="pot"></span></div><div class="note"><strong>You can say it.</strong><small>Even the messy parts.</small></div></div></div>
 </div></section>
 
-<section class="soft"><div class="wrap"><div class="center"><p class="kicker">A SPACE BUILT FOR HONEST CONVERSATION</p><h2 class="section-title">The things we can promise are simple.</h2><p class="section-copy narrow">No inflated numbers. No dramatic promises. Just a clear service, a private conversation and an easy way to reach out.</p></div>
-<div class="impact-grid"><div class="impact"><div class="impact-num">3</div><b>Languages</b><span>Hindi · Hinglish · English</span></div><div class="impact"><div class="impact-num">1-to-1</div><b>Private conversations</b><span>One person, one conversation</span></div><div class="impact"><div class="impact-num">100%</div><b>Human-led</b><span>No bots in your conversation</span></div><div class="impact"><div class="impact-num">24/7</div><b>Online access</b><span>Explore and request a session anytime</span></div></div>
+<section class="promise-strip" aria-label="The basics of The Unsaid"><div class="wrap promise-items">
+<div class="promise-item"><strong>Private 1-to-1</strong><span>One person, one conversation</span></div>
+<div class="promise-item"><strong>3 languages</strong><span>Hindi · Hinglish · English</span></div>
+<div class="promise-item"><strong>Human-led</strong><span>A real person, not a bot</span></div>
+<div class="promise-item"><strong>Book online anytime</strong><span>Explore sessions and request a time</span></div>
 </div></section>
 
 <section id="how"><div class="wrap">
@@ -92,11 +105,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <article class="step"><div class="step-num">02</div><b>During the conversation</b><span>Join on Google Meet at your booked time. Start with the concern you selected or simply say what is on your mind. We will explore it at your pace, in Hindi, Hinglish or English. You can keep your camera off; video is not required.</span></article>
 <article class="step"><div class="step-num">03</div><b>After we finish</b><span>Take a moment to reflect on what felt useful. You may leave with clearer questions or possible next steps. Every person’s situation is different, so no particular outcome is guaranteed.</span></article>
 </div>
-<div class="session-expect">
-<div><p class="kicker">TWO KINDS OF SESSION</p><h3>Choose the space that fits.</h3>
-<p><strong>Emotional guidance</strong><br>A space to talk things through, reflect on what you are feeling and consider your own next steps. It is not clinical psychotherapy, diagnosis or medical treatment.</p>
-<p><strong>Vedic astrology</strong><br>A traditional Vedic chart reading focused on the area you choose. It offers a perspective for reflection, not guaranteed predictions or a substitute for professional medical, legal or financial advice.</p>
-</div>
+<div class="session-expect single">
 <div><p class="kicker">NO SCRIPT REQUIRED</p><h3>You can start wherever you are.</h3><p>Bring one question, a confusing situation, or simply the thing you keep turning over in your mind. Share only what you feel comfortable sharing; you can ask questions about the process at any point.</p><p class="safety-note">The Unsaid is not an emergency service. <a href="crisis.html">Read about safety and boundaries</a>.</p>
 <div class="actions session-actions"><a class="btn primary" href="#sessions">Explore conversations →</a><a class="btn secondary" href="#astrology">Explore Vedic readings →</a></div>
 </div>
