@@ -46,6 +46,20 @@ section{padding:82px 0}.soft{background:var(--paper)}.center{text-align:center}.
 footer{padding:42px 0 52px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.footer-links{display:flex;gap:18px;flex-wrap:wrap}
 .session-expect{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:24px;padding:30px;border:1px solid #d7e0d4;border-radius:26px;background:#eef3eb}.session-expect h3{font-family:"Playfair Display",serif;font-size:clamp(25px,3vw,34px);line-height:1.15;margin:8px 0 14px}.session-expect p{color:var(--muted);font-size:14px;margin:0 0 14px}.session-expect strong{color:var(--ink)}.session-expect .safety-note{font-size:12px;margin-top:10px}.session-expect .safety-note a{color:#465d4d;text-decoration:underline;text-underline-offset:3px}.session-actions{margin:14px 0 0;gap:8px}.session-actions .btn{padding:11px 15px;font-size:13px}@media(max-width:950px){.journal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.space-grid,.astro-intro,.session-expect{grid-template-columns:1fr}.astro-sessions{grid-template-columns:1fr}.links{display:none}.menu{display:block}.links.open{position:absolute;left:16px;right:16px;top:68px;display:grid;gap:4px;background:var(--paper);padding:14px;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.links.open a{padding:10px}.hero-grid,.journey,.assess,.story,.book{grid-template-columns:1fr}.visual{min-height:430px}.impact-grid{grid-template-columns:repeat(2,1fr)}.cards,.sessions,.steps,.feedback{grid-template-columns:1fr}}
 @media(max-width:560px){.before-pay{padding:17px 15px}.before-pay h3{font-size:25px}.before-pay-list{gap:9px}.journal-grid{grid-template-columns:1fr}.journal-card{min-height:unset;padding:24px}.wrap{padding:0 16px}.hero{padding-top:46px}.hero h1{font-size:45px}.lead{font-size:17px}.form-row{grid-template-columns:1fr}.visual{min-height:360px}.room{left:0}.window{right:24px;top:36px;width:150px;height:180px}.chair{left:36px;bottom:60px;transform:scale(.83);transform-origin:bottom left}.plant{left:215px;transform:scale(.8);transform-origin:bottom left}.note{right:6px;bottom:7px}.impact-grid{grid-template-columns:1fr 1fr}.ring-wrap{grid-template-columns:1fr}.donut{margin:auto}.choice-row{grid-template-columns:1fr 1fr}section{padding:65px 0}}
+
+/* The Unsaid shared visual system: keep typography and palette consistent across pages. */
+:root{--bg:#f6f1e8;--paper:#fffdf8;--ink:#27312b;--muted:#626e65;--sage:#526957;--sage2:#dfe8dc;--sand:#e9dfd1;--line:#ddd6ca}
+*{-webkit-tap-highlight-color:transparent}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,h3,.title,.card h2{font-family:"Playfair Display",serif}
+p,li{color:var(--muted)}
+.byline,.small{color:var(--muted)}
+header{background:rgba(246,241,232,.92);border-bottom-color:var(--line)}
+.box{background:var(--sand);border-color:var(--line)}
+.try{background:var(--sage2);border-color:var(--line)}
+.topic-hint,.chart-note,.feedback-note,.astro-note{color:var(--muted)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
+.topic:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
 </style>
 </head>
 <body>
