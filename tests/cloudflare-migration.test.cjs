@@ -145,3 +145,29 @@ test("adapter preserves the raw webhook payload", async () => {
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { same: true });
 });
+
+test("API validation routes load safely without a configured database", async () => {
+  const previousDatabaseUrl = process.env.DATABASE_URL;
+  const dbPath = require.resolve("../lib/db");
+  const apiPath = require.resolve("../api/availability.js");
+
+  delete process.env.DATABASE_URL;
+  delete require.cache[dbPath];
+  delete require.cache[apiPath];
+
+  try {
+    const handler = require("../api/availability.js");
+    const { runLegacyHandler } = await import("../functions/_shared/legacy-adapter.js");
+    const request = new Request(
+      "https://the-unsaid-bg2.pages.dev/api/availability?date=2026-10-12&session=not-a-valid-session"
+    );
+    const response = await runLegacyHandler(request, handler);
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: "Invalid session." });
+  } finally {
+    if (previousDatabaseUrl === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = previousDatabaseUrl;
+    delete require.cache[apiPath];
+    delete require.cache[dbPath];
+  }
+});
