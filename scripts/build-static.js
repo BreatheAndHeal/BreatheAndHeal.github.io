@@ -141,7 +141,19 @@ try {
     throw new Error("Build output is missing index.html.");
   }
 
+  // Staging builds stay non-indexable by default. Enabling search indexing is
+  // an explicit launch step, after the live booking flow has been verified.
+  const indexingEnabled = String(process.env.SITE_INDEXING_ENABLED || "false").trim().toLowerCase() === "true";
+  const generatedHeaders = fs.readFileSync(headersPath, "utf8");
+  const safeHeaders = indexingEnabled
+    ? generatedHeaders.replace(/^\s*X-Robots-Tag:\s*noindex[^\n]*\n/gim, "")
+    : /^\s*X-Robots-Tag:\s*noindex\b/im.test(generatedHeaders)
+      ? generatedHeaders
+      : generatedHeaders.replace(/^\/\*\s*\n/, "/*\n  X-Robots-Tag: noindex\n");
+  fs.writeFileSync(headersPath, safeHeaders);
+
   console.log("Static site built to dist/; backend source and configuration were excluded.");
+  console.log("Search indexing is " + (indexingEnabled ? "enabled" : "disabled by default") + ".");
   console.log("Public origin set to " + publicOrigin + "; updated " + rewrittenCount + " file(s).");
 } catch (error) {
   console.error("Static build failed:", error.message);
