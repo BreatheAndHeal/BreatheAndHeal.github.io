@@ -39,9 +39,77 @@ function removeOutput() {
   fs.rmSync(output, { recursive: true, force: true });
 }
 
+function requirePublicOrigin() {
+  const raw = String(process.env.PUBLIC_SITE_URL || "").trim();
+  if (!raw) {
+    throw new Error("PUBLIC_SITE_URL must be set to the final HTTPS site origin before building.");
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error("PUBLIC_SITE_URL must be a valid absolute HTTPS URL.");
+  }
+
+  if (
+    parsed.protocol !== "https:" ||
+    parsed.username ||
+    parsed.password ||
+    parsed.pathname !== "/" ||
+    parsed.search ||
+    parsed.hash
+  ) {
+    throw new Error("PUBLIC_SITE_URL must be an HTTPS origin only, without a path, query, or fragment.");
+  }
+
+  return parsed.origin;
+}
+
+function rewriteLegacyOrigin(publicOrigin) {
+  const allowedTextExtensions = new Set([".html", ".xml", ".txt", ".js", ".mjs"]);
+  const oldOrigin = "https://breatheandheal.github.io";
+  let updatedFiles = 0;
+
+  function visit(folder) {
+    for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+      const fullPath = path.join(folder, entry.name);
+      if (entry.isDirectory()) {
+        visit(fullPath);
+        continue;
+      }
+
+      if (!allowedTextExtensions.has(path.extname(entry.name).toLowerCase())) continue;
+      const original = fs.readFileSync(fullPath, "utf8");
+      const updated = original.replaceAll(oldOrigin, publicOrigin);
+      if (updated !== original) {
+        fs.writeFileSync(fullPath, updated);
+        updatedFiles += 1;
+      }
+    }
+  }
+
+  visit(output);
+
+  // Fail closed: do not publish HTML, metadata or discovery files that still
+  // canonicalize the site to the old GitHub Pages host.
+  for (const entry of fs.readdirSync(output, { withFileTypes: true })) {
+    if (entry.isFile() && allowedTextExtensions.has(path.extname(entry.name).toLowerCase())) {
+      const contents = fs.readFileSync(path.join(output, entry.name), "utf8");
+      if (contents.includes(oldOrigin)) {
+        throw new Error("Old GitHub Pages origin remains in public file: " + entry.name);
+      }
+    }
+  }
+
+  return updatedFiles;
+}
+
 try {
+  const publicOrigin = requirePublicOrigin();
   removeOutput();
   copyPublicTree(root, output);
+  const rewrittenCount = rewriteLegacyOrigin(publicOrigin);
 
   const headersPath = path.join(output, "_headers");
   if (!fs.existsSync(headersPath)) {
@@ -67,6 +135,7 @@ try {
   }
 
   console.log("Static site built to dist/; backend source and configuration were excluded.");
+  console.log("Public origin set to " + publicOrigin + "; updated " + rewrittenCount + " file(s).");
 } catch (error) {
   console.error("Static build failed:", error.message);
   process.exitCode = 1;
