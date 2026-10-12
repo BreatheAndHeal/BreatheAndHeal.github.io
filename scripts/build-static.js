@@ -9,7 +9,7 @@ const excludedDirectories = new Set([
 ]);
 const excludedFiles = new Set(["package.json", "package-lock.json", "schema.sql", "vercel.json", "wrangler.toml", "README.md", "BOOKING_SETUP.md", "CLOUDFLARE_MIGRATION.md", ".gitignore", ".nojekyll"]);
 const publicExtensions = new Set([
-  ".html", ".css", ".js", ".mjs", ".txt", ".xml", ".json",
+  ".html", ".css", ".js", ".mjs", ".txt", ".xml",
   ".svg", ".png", ".jpg", ".jpeg", ".webp", ".avif", ".ico",
   ".webmanifest", ".woff", ".woff2", ".ttf", ".pdf", ".mp4", ".webm"
 ]);
