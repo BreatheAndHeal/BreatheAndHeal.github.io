@@ -66,7 +66,8 @@ jobs:
       - name: Smoke test static page and server-side API routes
         run: |
           set -euo pipefail
-          curl --silent --show-error --fail http://127.0.0.1:8788/ | grep -q "The Unsaid"
+          curl --silent --show-error --fail -o /tmp/the-unsaid-homepage.html http://127.0.0.1:8788/
+          grep -q "The Unsaid" /tmp/the-unsaid-homepage.html
           status=$(curl --silent --show-error -o /tmp/availability.json -w "%{http_code}" "http://127.0.0.1:8788/api/availability?date=2026-10-12&session=not-a-valid-session")
           test "$status" = "400"
           grep -q "Invalid session" /tmp/availability.json
