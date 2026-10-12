@@ -32,7 +32,16 @@ test("Cloudflare build publishes public pages but not backend source", () => {
   }
 
   const html = fs.readFileSync(path.join(dist, "index.html"), "utf8");
+  const expectedOrigin = process.env.PUBLIC_SITE_URL;
+  assert.ok(expectedOrigin, "PUBLIC_SITE_URL must be supplied to the build");
   assert.match(html, /const API_BASE="";/, "frontend APIs must be same-origin");
+  assert.ok(html.includes('href="' + expectedOrigin + '/">' ) || html.includes('href="' + expectedOrigin + '">'), "homepage canonical should match the selected origin");
+  assert.equal(html.includes("https://breatheandheal.github.io"), false, "homepage must not point to the old hosting URL");
+  const robots = fs.readFileSync(path.join(dist, "robots.txt"), "utf8");
+  assert.ok(robots.includes("Sitemap: " + expectedOrigin + "/sitemap.xml"), "robots sitemap URL should match the selected origin");
+  const sitemap = fs.readFileSync(path.join(dist, "sitemap.xml"), "utf8");
+  assert.ok(sitemap.includes("<loc>" + expectedOrigin + "/</loc>"), "sitemap URLs should use the selected origin");
+  assert.equal(sitemap.includes("https://breatheandheal.github.io"), false, "sitemap must not use the old hosting URL");
 });
 
 test("adapter preserves query/body and converts legacy responses", async () => {
