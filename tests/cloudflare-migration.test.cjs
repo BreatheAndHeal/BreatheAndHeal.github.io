@@ -24,6 +24,9 @@ test("Cloudflare build publishes public pages but not backend source", () => {
   assert.ok(publicHtmlFiles.length > 0, "public HTML pages should be present");
   for (const file of publicHtmlFiles) {
     const page = fs.readFileSync(path.join(dist, file), "utf8");
+    // Google verification may be a plain-text token stored in a .html file;
+    // it is not a document and cannot contain metadata.
+    if (!/<head\\b[^>]*>/i.test(page)) continue;
     assert.match(
       page,
       /<meta name="robots" content="noindex, nofollow">/i,
