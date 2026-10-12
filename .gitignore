@@ -14,3 +14,7 @@ node_modules/
 Thumbs.db
 .vscode/
 .idea/
+# Cloudflare Pages build and local secrets
+/dist/
+/.dev.vars
+/.wrangler/
