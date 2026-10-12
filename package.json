@@ -2,10 +2,13 @@
   "name": "the-unsaid-booking-backend",
   "private": true,
   "type": "commonjs",
+  "scripts": {
+    "build": "node scripts/build-static.js"
+  },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1"
   },
   "engines": {
-    "node": "24.x"
+    "node": ">=20"
   }
 }
