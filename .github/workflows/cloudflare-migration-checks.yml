@@ -24,6 +24,8 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Run migration tests and static build
+        env:
+          PUBLIC_SITE_URL: https://the-unsaid-test.pages.dev
         run: npm run build
       - name: Verify backend files are excluded from public output
         run: |
