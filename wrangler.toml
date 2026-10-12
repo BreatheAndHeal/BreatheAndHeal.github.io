@@ -1,0 +1,4 @@
+name = "the-unsaid"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-12"
+compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
