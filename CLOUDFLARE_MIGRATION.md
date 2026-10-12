@@ -40,6 +40,18 @@ Optional:
 
 The site must use relative same-origin API paths (/api/...). Do not store secret values in frontend variables, HTML, or build-time public variables.
 
+## Staging data isolation is mandatory
+
+Do not configure the staging project with the production `DATABASE_URL`, production Razorpay keys, or the production `GOOGLE_APPS_SCRIPT_SECRET`. A captured Razorpay Test Mode payment still drives the booking confirmation code; if staging shares production data/calendar credentials, it could create real database rows, locks, Calendar events, and emails.
+
+Before end-to-end payment tests:
+- Create a separate empty Neon test database/project and apply `schema.sql`; do not clone real customer booking data merely for testing.
+- Use Razorpay **Test Mode** credentials and its matching test webhook configuration.
+- Use a separate Apps Script deployment connected to a dedicated test Google Calendar, with a separate secret and test-only email recipients. If this is not ready, do not claim the end-to-end booking test has passed.
+- Configure preview/test secrets only in the staging environment. Keep production credentials in the production environment, and do not paste either set into chat.
+
+Only after tests pass should the production environment be switched to the existing production database, approved live Razorpay keys/webhook secret, and the current production Apps Script secret. The old live website remains available during staging.
+
 ## Required verification before production cutover
 
 1. Confirm the preview site loads all pages and static assets; confirm API source files are not publicly served as static files.
