@@ -7,6 +7,7 @@ const excludedDirectories = new Set([
   ".git", ".github", ".vercel", ".wrangler", "node_modules", "dist",
   "api", "lib", "functions", "scripts", "tests", "coverage"
 ]);
+const excludedFiles = new Set(["package.json", "package-lock.json", "schema.sql", "vercel.json", "wrangler.toml", "README.md", "BOOKING_SETUP.md", "CLOUDFLARE_MIGRATION.md", ".gitignore", ".nojekyll"]);
 const publicExtensions = new Set([
   ".html", ".css", ".js", ".mjs", ".txt", ".xml", ".json",
   ".svg", ".png", ".jpg", ".jpeg", ".webp", ".avif", ".ico",
@@ -27,7 +28,7 @@ function copyPublicTree(source, destination) {
       continue;
     }
 
-    if (name === "_headers" || publicExtensions.has(path.extname(name).toLowerCase())) {
+    if (!excludedFiles.has(name) && (name === "_headers" || publicExtensions.has(path.extname(name).toLowerCase()))) {
       if (name.startsWith(".") && name !== ".well-known") continue;
       fs.copyFileSync(from, to);
     }
