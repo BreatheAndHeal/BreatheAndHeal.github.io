@@ -20,6 +20,16 @@ test("Cloudflare build publishes public pages but not backend source", () => {
   assert.ok(fs.existsSync(path.join(dist, "_headers")), "security headers should be published");
   const headers = fs.readFileSync(path.join(dist, "_headers"), "utf8");
   assert.match(headers, /X-Robots-Tag:\s*noindex/i, "staging build should not be indexed before launch");
+  const publicHtmlFiles = fs.readdirSync(dist).filter((name) => name.toLowerCase().endsWith(".html"));
+  assert.ok(publicHtmlFiles.length > 0, "public HTML pages should be present");
+  for (const file of publicHtmlFiles) {
+    const page = fs.readFileSync(path.join(dist, file), "utf8");
+    assert.match(
+      page,
+      /<meta name="robots" content="noindex, nofollow">/i,
+      file + " should have an explicit noindex meta tag while staging"
+    );
+  }
 
   for (const privatePath of [
     "api", "lib", "functions", "scripts", "tests",
@@ -55,6 +65,8 @@ test("search indexing is enabled only through an explicit build switch", () => {
 
   const headers = fs.readFileSync(path.join(dist, "_headers"), "utf8");
   assert.doesNotMatch(headers, /X-Robots-Tag:\s*noindex/i, "explicit launch build should remove the staging noindex header");
+  const html = fs.readFileSync(path.join(dist, "index.html"), "utf8");
+  assert.match(html, /<meta name="robots" content="index,follow">/i, "explicit launch build should preserve the source's indexable robots meta tag");
 });
 
 test("adapter preserves query/body and converts legacy responses", async () => {
