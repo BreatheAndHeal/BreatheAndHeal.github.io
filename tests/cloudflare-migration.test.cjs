@@ -19,7 +19,7 @@ test("Cloudflare build publishes public pages but not backend source", () => {
   assert.ok(fs.existsSync(path.join(dist, "sitemap.xml")), "sitemap.xml should be published");
   assert.ok(fs.existsSync(path.join(dist, "_headers")), "security headers should be published");
   const headers = fs.readFileSync(path.join(dist, "_headers"), "utf8");
-  assert.match(headers, /X-Robots-Tag:\\s*noindex/i, "staging build should not be indexed before launch");
+  assert.match(headers, /X-Robots-Tag:\s*noindex/i, "staging build should not be indexed before launch");
 
   for (const privatePath of [
     "api", "lib", "functions", "scripts", "tests",
