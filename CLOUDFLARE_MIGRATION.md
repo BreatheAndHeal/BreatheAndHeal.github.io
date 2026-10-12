@@ -17,6 +17,8 @@ The build script intentionally excludes api/, lib/, functions/, scripts/, schema
 
 Configure values in Cloudflare Dashboard > Workers & Pages > the Pages project > Settings > Variables and Secrets. Never commit secret values or paste them into chat.
 
+Set the non-secret build variable `PUBLIC_SITE_URL` to the exact final HTTPS origin. Example: `https://the-unsaid.pages.dev` only if that is the actual assigned project URL. The build intentionally fails without this variable and rewrites page canonical/social metadata, sitemap, and robots.txt to that origin. If Cloudflare assigns a different `pages.dev` name, use that exact origin instead.
+
 Required for the current code:
 - DATABASE_URL — existing Neon PostgreSQL connection string
 - RAZORPAY_KEY_ID — test key for preview; live key only after testing is approved
