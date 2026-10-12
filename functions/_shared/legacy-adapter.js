@@ -3,6 +3,7 @@ const MAX_BODY_BYTES = 1_000_000;
 function securityHeaders() {
   return new Headers({
     "Cache-Control": "no-store",
+    "X-Robots-Tag": "noindex, nofollow",
     "Strict-Transport-Security": "max-age=31536000",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
