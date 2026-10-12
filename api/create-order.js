@@ -5,6 +5,17 @@ const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
 
+let consentSchemaPromise=null;
+async function ensureConsentSchema(){
+  if(!consentSchemaPromise){
+    consentSchemaPromise=(async()=>{
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_accepted BOOLEAN NOT NULL DEFAULT FALSE`;
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ`;
+    })().catch(err=>{consentSchemaPromise=null;throw err;});
+  }
+  return consentSchemaPromise;
+}
+
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
   if(req.method !== "POST") return json(res,405,{error:"Method not allowed."});
@@ -12,6 +23,8 @@ module.exports = async (req,res) => {
     return json(res,429,{error:"Too many booking attempts. Please wait a little and try again."});
   try {
     const body=req.body || {};
+    if(body.consentAccepted!==true)
+      return json(res,400,{error:"Please confirm you are 18 or older and agree to the Privacy Policy, Terms and Cancellation and Refunds."});
     const rawSession=clean(body.session);
     const sessionName=canonicalSession(rawSession);
     const meta=sessionName ? SESSIONS[sessionName] : null;
@@ -59,6 +72,9 @@ module.exports = async (req,res) => {
       return json(res,503,{error:"Availability is temporarily unavailable. Please try again shortly."});
     }
 
+    // Ensure existing databases have the consent evidence columns before booking insert.
+    await ensureConsentSchema();
+
     // Remove expired holds so slots become reusable.
     await sql`DELETE FROM slot_locks WHERE expires_at IS NOT NULL AND expires_at < NOW()`;
 
@@ -67,12 +83,12 @@ module.exports = async (req,res) => {
 
     await sql`INSERT INTO bookings
       (id,service,session_name,amount_inr,duration_minutes,customer_name,customer_email,customer_whatsapp,
-       booking_date,booking_time,language,concern,message,birth_date,birth_time,birth_place,
+       booking_date,booking_time,language,concern,message,birth_date,birth_time,birth_place,consent_accepted,consent_at,
        payment_status,booking_status,expires_at)
       VALUES
       (${bookingId},${meta.service},${sessionName},${meta.amount},${meta.duration},${customerName},${email},${whatsapp},
        ${date},${time},${clean(body.language,30)},${clean(body.concern,100)},${clean(body.message,5000)},
-       ${birthDate||null},${birthTime||null},${birthPlace||null},
+       ${birthDate||null},${birthTime||null},${birthPlace||null},TRUE,NOW(),
        'created','pending',${expiresAt})`;
 
     try {

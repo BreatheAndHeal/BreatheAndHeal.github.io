@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS bookings (
   birth_date DATE,
   birth_time TIME,
   birth_place TEXT,
+  consent_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+  consent_at TIMESTAMPTZ,
   razorpay_order_id TEXT UNIQUE,
   razorpay_payment_id TEXT UNIQUE,
   payment_status TEXT NOT NULL DEFAULT 'created',
@@ -27,6 +29,10 @@ CREATE TABLE IF NOT EXISTS bookings (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Also add the consent columns when this schema is applied to an existing database.
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_accepted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS slot_locks (
   booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
