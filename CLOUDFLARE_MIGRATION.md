@@ -19,6 +19,8 @@ Configure values in Cloudflare Dashboard > Workers & Pages > the Pages project >
 
 Set the non-secret build variable `PUBLIC_SITE_URL` to the exact final HTTPS origin. Example: `https://the-unsaid.pages.dev` only if that is the actual assigned project URL. The build intentionally fails without this variable and rewrites page canonical/social metadata, sitemap, and robots.txt to that origin. If Cloudflare assigns a different `pages.dev` name, use that exact origin instead.
 
+Keep the non-secret build variable `SITE_INDEXING_ENABLED=false` throughout staging and testing. The static output will send `X-Robots-Tag: noindex` until final launch. Only after all critical production tests pass, set `SITE_INDEXING_ENABLED=true` for the production environment and redeploy; API responses remain `noindex, nofollow`.
+
 Required for the current code:
 - DATABASE_URL — existing Neon PostgreSQL connection string
 - RAZORPAY_KEY_ID — test key for preview; live key only after testing is approved
