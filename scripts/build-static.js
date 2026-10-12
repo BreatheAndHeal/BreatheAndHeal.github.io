@@ -56,9 +56,9 @@ function enforceRobotsMeta(indexingEnabled) {
       if (robotsMetaPattern.test(original)) {
         updated = original.replace(robotsMetaPattern, noIndexTag);
       } else {
-        if (!headPattern.test(original)) {
-          throw new Error("Cannot enforce staging robots policy; HTML file has no head element: " + path.relative(output, fullPath));
-        }
+        // Some verification files use an .html extension but contain only a
+        // plain-text token. Leave these intact; they are not HTML documents.
+        if (!headPattern.test(original)) continue;
         updated = original.replace(headPattern, (head) => head + "\n" + noIndexTag);
       }
       if (updated !== original) fs.writeFileSync(fullPath, updated);
