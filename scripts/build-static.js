@@ -35,6 +35,39 @@ function copyPublicTree(source, destination) {
   }
 }
 
+function enforceRobotsMeta(indexingEnabled) {
+  if (indexingEnabled) return;
+
+  const noIndexTag = '<meta name="robots" content="noindex, nofollow">';
+  const robotsMetaPattern = /<meta\b(?=[^>]*\bname\s*=\s*["']robots["'])[^>]*>/i;
+  const headPattern = /<head\b[^>]*>/i;
+
+  function visit(folder) {
+    for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+      const fullPath = path.join(folder, entry.name);
+      if (entry.isDirectory()) {
+        visit(fullPath);
+        continue;
+      }
+      if (path.extname(entry.name).toLowerCase() !== ".html") continue;
+
+      const original = fs.readFileSync(fullPath, "utf8");
+      let updated;
+      if (robotsMetaPattern.test(original)) {
+        updated = original.replace(robotsMetaPattern, noIndexTag);
+      } else {
+        if (!headPattern.test(original)) {
+          throw new Error("Cannot enforce staging robots policy; HTML file has no head element: " + path.relative(output, fullPath));
+        }
+        updated = original.replace(headPattern, (head) => head + "\n" + noIndexTag);
+      }
+      if (updated !== original) fs.writeFileSync(fullPath, updated);
+    }
+  }
+
+  visit(output);
+}
+
 function removeOutput() {
   fs.rmSync(output, { recursive: true, force: true });
 }
@@ -114,8 +147,10 @@ function rewriteLegacyOrigin(publicOrigin) {
 
 try {
   const publicOrigin = requirePublicOrigin();
+  const indexingEnabled = String(process.env.SITE_INDEXING_ENABLED || "false").trim().toLowerCase() === "true";
   removeOutput();
   copyPublicTree(root, output);
+  enforceRobotsMeta(indexingEnabled);
   const rewrittenCount = rewriteLegacyOrigin(publicOrigin);
 
   const headersPath = path.join(output, "_headers");
@@ -143,7 +178,6 @@ try {
 
   // Staging builds stay non-indexable by default. Enabling search indexing is
   // an explicit launch step, after the live booking flow has been verified.
-  const indexingEnabled = String(process.env.SITE_INDEXING_ENABLED || "false").trim().toLowerCase() === "true";
   const generatedHeaders = fs.readFileSync(headersPath, "utf8");
   const safeHeaders = indexingEnabled
     ? generatedHeaders.replace(/^\s*X-Robots-Tag:\s*noindex[^\n]*\n/gim, "")
