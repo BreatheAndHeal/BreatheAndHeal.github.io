@@ -1,0 +1,37 @@
+name: Cloudflare migration checks
+
+on:
+  push:
+    branches:
+      - migration/cloudflare-staging
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install
+      - name: Run migration tests and static build
+        run: npm run build
+      - name: Verify backend files are excluded from public output
+        run: |
+          test -f dist/index.html
+          test -f dist/robots.txt
+          test -f dist/sitemap.xml
+          test ! -e dist/api
+          test ! -e dist/lib
+          test ! -e dist/functions
+          test ! -e dist/schema.sql
+          test ! -e dist/package.json
