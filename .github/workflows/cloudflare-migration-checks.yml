@@ -35,3 +35,58 @@ jobs:
           test ! -e dist/functions
           test ! -e dist/schema.sql
           test ! -e dist/package.json
+      - name: Start local Cloudflare Pages runtime
+        run: |
+          cat > .dev.vars <<'VARS'
+          DATABASE_URL=postgresql://smoke:smoke@localhost:5432/smoke
+          RAZORPAY_KEY_SECRET=smoke-test-only-not-a-real-key
+          RAZORPAY_KEY_ID=rzp_test_smoke_only
+          RAZORPAY_WEBHOOK_SECRET=smoke-webhook-only
+          GOOGLE_APPS_SCRIPT_SECRET=smoke-apps-script-only
+          ALLOWED_ORIGIN=http://127.0.0.1:8788
+          BOOKING_TIMEZONE=Asia/Kolkata
+          WORK_START_HOUR=10
+          WORK_END_HOUR=22
+          SLOT_INTERVAL_MINUTES=30
+          MIN_LEAD_MINUTES=60
+          WORK_DAYS=1,2,3,4,5,6
+          VARS
+          npx --yes wrangler@4 pages dev dist --ip 127.0.0.1 --port 8788 > /tmp/the-unsaid-wrangler.log 2>&1 &
+          echo $! > /tmp/the-unsaid-wrangler.pid
+          for i in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:8788/ -o /dev/null; then
+              echo "Cloudflare Pages local runtime is ready."
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/the-unsaid-wrangler.log
+          echo "Cloudflare Pages local runtime failed to start."
+          exit 1
+      - name: Smoke test static page and server-side API routes
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail http://127.0.0.1:8788/ | grep -q "The Unsaid"
+          status=$(curl --silent --show-error -o /tmp/availability.json -w "%{http_code}" "http://127.0.0.1:8788/api/availability?date=2026-10-12&session=not-a-valid-session")
+          test "$status" = "400"
+          grep -q "Invalid session" /tmp/availability.json
+          status=$(curl --silent --show-error -o /tmp/create-order.json -w "%{http_code}" -X POST -H "Origin: http://127.0.0.1:8788" -H "Content-Type: application/json" --data '{"consentAccepted":false}' http://127.0.0.1:8788/api/create-order)
+          test "$status" = "400"
+          grep -q "Please confirm" /tmp/create-order.json
+          status=$(curl --silent --show-error -o /tmp/booking-status.json -w "%{http_code}" "http://127.0.0.1:8788/api/booking-status")
+          test "$status" = "400"
+          grep -q "Missing bookingId" /tmp/booking-status.json
+          status=$(curl --silent --show-error -o /tmp/webhook.txt -w "%{http_code}" "http://127.0.0.1:8788/api/webhook")
+          test "$status" = "405"
+          if curl --silent --fail http://127.0.0.1:8788/api/create-order.js -o /dev/null; then
+            echo "Backend source was unexpectedly served as a static asset."
+            exit 1
+          fi
+          echo "Cloudflare runtime smoke tests passed."
+      - name: Stop local Cloudflare Pages runtime
+        if: always()
+        run: |
+          if test -f /tmp/the-unsaid-wrangler.pid; then
+            kill "$(cat /tmp/the-unsaid-wrangler.pid)" 2>/dev/null || true
+          fi
+          rm -f .dev.vars
