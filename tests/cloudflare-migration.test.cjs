@@ -46,6 +46,17 @@ test("Cloudflare build publishes public pages but not backend source", () => {
   assert.equal(sitemap.includes("https://breatheandheal.github.io"), false, "sitemap must not use the old hosting URL");
 });
 
+test("search indexing is enabled only through an explicit build switch", () => {
+  execFileSync(process.execPath, ["scripts/build-static.js"], {
+    cwd: root,
+    stdio: "pipe",
+    env: { ...process.env, SITE_INDEXING_ENABLED: "true" }
+  });
+
+  const headers = fs.readFileSync(path.join(dist, "_headers"), "utf8");
+  assert.doesNotMatch(headers, /X-Robots-Tag:\s*noindex/i, "explicit launch build should remove the staging noindex header");
+});
+
 test("adapter preserves query/body and converts legacy responses", async () => {
   const { runLegacyHandler } = await import("../functions/_shared/legacy-adapter.js");
   const request = new Request(
