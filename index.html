@@ -404,20 +404,23 @@ async function recoverPendingBooking(bookingId,type){
  const accessToken=sessionStorage.getItem("theUnsaidBookingAccessToken_"+bookingId)||"";
  const target=isAstro?astrologySuccess:emotionalSuccess;
  const statusEl=isAstro?astroStatus:status;
- if(!bookingId)return false;
-
- try{
-   for(let i=0;i<24;i++){
-     if(!accessToken) return false;
-     const r=await fetch(API_BASE+"/api/booking-status?bookingId="+encodeURIComponent(bookingId),{
-       headers:{
-         "Accept":"application/json",
-         "X-Booking-Access-Token":accessToken
-       },
-       cache:"no-store"
-     });
-     const data=await r.json();
-
+ const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
+ if(!bookingId || !accessToken)return false;
+ let paymentKnown=false;
+ let reservedShown=false;
+ for(let i=0;i<24;i++){
+   try{
+     const controller=new AbortController();
+     const timeoutId=setTimeout(()=>controller.abort(),15000);
+     let r,data;
+     try{
+       r=await fetch(API_BASE+"/api/booking-status?bookingId="+encodeURIComponent(bookingId),{
+         headers:{"Accept":"application/json","X-Booking-Access-Token":accessToken},
+         cache:"no-store",
+         signal:controller.signal
+       });
+       data=await r.json();
+     }finally{clearTimeout(timeoutId)}
      if(r.ok && data.ok){
        if(data.slotConflict){
          showSuccess(target,
@@ -428,67 +431,52 @@ async function recoverPendingBooking(bookingId,type){
            "<p>Contact support: "+escapeHtml(supportMessage())+"</p>"
          );
          setStatus(statusEl,"Payment verified. Please do not pay again. Contact support for rescheduling/refund.");
-         try{
-           localStorage.removeItem("theUnsaidPendingBooking");
-           sessionStorage.removeItem("theUnsaidBookingAccessToken_"+data.bookingId);
-         }catch(_){}
-         const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
-         bookingSubmissionPending[type]=false;submit.disabled=!hasBookingConsent(type);
-         submit.textContent="Payment received ✓";
+         bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent="Payment received ✓";
          return true;
        }
        const paymentPaid=data.paymentStatus==="paid";
-       const confirmed=data.bookingStatus==="confirmed";
-       const meetUrl=safeMeetUrl(data.meetLink);
-       const meet=meetUrl?
-         '<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
-
+       const confirmed=data.bookingStatus==="confirmed" && Boolean(data.meetLink);
        if(paymentPaid || confirmed){
-         const pending=!confirmed || !data.meetLink;
-         showSuccess(target,
-           "<h4>"+(pending?"Payment received — booking reserved ✓":"Booking confirmed ✓")+"</h4>"+
-           "<p><strong>"+escapeHtml(data.session)+"</strong></p>"+
-           "<p>"+escapeHtml(data.date)+" · "+escapeHtml(prettyTime(data.time))+"</p>"+
-           "<p>Booking ID: "+escapeHtml(data.bookingId)+"</p>"+
-           (data.meetLink?
-             "<p>Your Google Meet link is ready.</p>":
-             "<p>Your payment is verified and the booking is reserved. The meeting link is being created.</p>")+
-           meet
-         );
-         setStatus(statusEl,pending?
-           "Payment verified. Booking reserved while the meeting link is created.":
-           "Booking confirmed successfully."
-         );
-         // Keep the recovery record when Calendar/Meet is still pending.
-         // Remove it only after the booking is fully confirmed with a Meet link.
-         try{
-           if(!pending){
-             localStorage.removeItem("theUnsaidPendingBooking");
-             sessionStorage.removeItem("theUnsaidBookingAccessToken_"+data.bookingId);
-           }else{
-             localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({
-               bookingId:data.bookingId,
-               type,
-               session:data.session,
-               createdAt:Date.now()
-             }));
-           }
-         }catch(_){}
-         const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
-         restoreSubmitButton(type,submit,pending?"Payment received ✓":"Payment complete ✓");
-         return true;
+         paymentKnown=true;
+         if(confirmed){
+           const meetUrl=safeMeetUrl(data.meetLink);
+           const meet=meetUrl?'<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
+           showSuccess(target,
+             "<h4>Booking confirmed ✓</h4>"+
+             "<p><strong>"+escapeHtml(data.session)+"</strong></p>"+
+             "<p>"+escapeHtml(data.date)+" · "+escapeHtml(prettyTime(data.time))+"</p>"+
+             "<p>Booking ID: "+escapeHtml(data.bookingId)+"</p>"+
+             "<p>Your Google Meet link is ready.</p>"+meet
+           );
+           setStatus(statusEl,"Booking confirmed successfully.");
+           try{localStorage.removeItem("theUnsaidPendingBooking");sessionStorage.removeItem("theUnsaidBookingAccessToken_"+data.bookingId)}catch(_){}
+           bookingSubmissionPending[type]=false;submit.disabled=!hasBookingConsent(type);submit.textContent="Payment complete ✓";
+           return true;
+         }
+         if(!reservedShown){
+           showSuccess(target,
+             "<h4>Payment received — booking reserved ✓</h4>"+
+             "<p><strong>"+escapeHtml(data.session)+"</strong></p>"+
+             "<p>"+escapeHtml(data.date)+" · "+escapeHtml(prettyTime(data.time))+"</p>"+
+             "<p>Booking ID: "+escapeHtml(data.bookingId)+"</p>"+
+             "<p>Your payment is verified. We are finishing the Google Calendar and Meet setup automatically.</p>"+
+             "<p>Please do not make another payment.</p>"
+           );
+           setStatus(statusEl,"Payment verified. Booking reserved; Google Meet setup is being completed automatically.");
+           try{localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({bookingId:data.bookingId,type,session:data.session,createdAt:Date.now()}))}catch(_){}
+           reservedShown=true;
+         }
+         bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent="Payment received ✓";
        }
      }
-
-     await new Promise(resolve=>setTimeout(resolve,5000));
-   }
-
-   setStatus(statusEl,"Payment status is still being confirmed. Please do not pay again; your booking is being checked.");
- }catch(err){
-   console.error("booking recovery:",err);
-   setStatus(statusEl,"Payment status is being checked. Please do not pay again.");
+   }catch(err){console.warn("Booking status check will retry:",err?.name||"request_error")}
+   if(i<23)await new Promise(resolve=>setTimeout(resolve,5000));
  }
- return false;
+ setStatus(statusEl,paymentKnown
+   ? "Payment verified and your slot is reserved. Google Meet setup is taking longer than expected; please do not pay again. Keep this page open or return later for recovery."
+   : "Payment status is still being checked. Please do not pay again; keep this page open or return later to check.");
+ bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent=paymentKnown?"Payment received ✓":"Checking payment status…";
+ return paymentKnown;
 }
 
 async function startPayment({formData,type}){
@@ -545,53 +533,69 @@ async function startPayment({formData,type}){
      }},
      handler:async function(response){
        submit.textContent="Verifying payment…";
-       const vr=await fetch(API_BASE+"/api/verify-payment",{
-         method:"POST",
-         headers:{"Content-Type":"application/json","Accept":"application/json"},
-         body:JSON.stringify({
-           bookingId:order.bookingId,
-           razorpay_order_id:response.razorpay_order_id,
-           razorpay_payment_id:response.razorpay_payment_id,
-           razorpay_signature:response.razorpay_signature
-         })
-       });
-       const verified=await vr.json();
-       if(!vr.ok || !verified.ok)throw new Error(verified.error||"Payment verification failed.");
-       const target=isAstro?astrologySuccess:emotionalSuccess;
-       const meetUrl=safeMeetUrl(verified.meetLink);
-       const meet=meetUrl?'<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
-       const pending=Boolean(verified.pending || verified.calendarPending);
-       if(verified.slotConflict){
+       setStatus(isAstro?astroStatus:status,"Verifying your payment securely. Please do not pay again.");
+       try{
+         const controller=new AbortController();
+         const timeoutId=setTimeout(()=>controller.abort(),20000);
+         let vr;
+         try{
+           vr=await fetch(API_BASE+"/api/verify-payment",{
+             method:"POST",
+             headers:{"Content-Type":"application/json","Accept":"application/json"},
+             body:JSON.stringify({
+               bookingId:order.bookingId,
+               razorpay_order_id:response.razorpay_order_id,
+               razorpay_payment_id:response.razorpay_payment_id,
+               razorpay_signature:response.razorpay_signature
+             }),
+             signal:controller.signal
+           });
+         }finally{clearTimeout(timeoutId)}
+         let verified;
+         try{verified=await vr.json()}catch(_){throw new Error("Payment response could not be read. Checking status automatically.")}
+         if(!vr.ok||!verified.ok)throw new Error(verified.error||"Payment verification is still pending.");
+         const target=isAstro?astrologySuccess:emotionalSuccess;
+         const meetUrl=safeMeetUrl(verified.meetLink);
+         const meet=meetUrl?'<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
+         if(verified.slotConflict){
+           showSuccess(target,
+             "<h4>Payment received · slot needs rescheduling</h4>"+
+             "<p><strong>"+escapeHtml(verified.session)+"</strong></p>"+
+             "<p>"+escapeHtml(verified.date)+" · "+escapeHtml(prettyTime(verified.time))+"</p>"+
+             "<p>Your payment was verified, but the selected time became unavailable before confirmation. Please do not pay again.</p>"+
+             "<p>Contact support: "+escapeHtml(supportMessage())+"</p>"
+           );
+           setStatus(isAstro?astroStatus:status,"Payment verified. Please do not pay again. Contact support for rescheduling/refund.");
+           bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent="Payment received ✓";
+           return;
+         }
+         const pending=Boolean(verified.pending||verified.calendarPending);
          showSuccess(target,
-           "<h4>Payment received · slot needs rescheduling</h4>"+
+           "<h4>"+(pending?"Payment received — booking reserved ✓":"Booking confirmed ✓")+"</h4>"+
            "<p><strong>"+escapeHtml(verified.session)+"</strong></p>"+
            "<p>"+escapeHtml(verified.date)+" · "+escapeHtml(prettyTime(verified.time))+"</p>"+
-           "<p>Your payment was verified, but the selected time became unavailable before confirmation. Please do not pay again.</p>"+
-           "<p>Contact support: "+escapeHtml(supportMessage())+"</p>"
+           "<p>Booking ID: "+escapeHtml(verified.bookingId)+"</p>"+
+           (verified.meetLink?"<p>Your Google Meet link is ready.</p>":pending?"<p>Your payment is verified and your slot is reserved. We are finishing Google Calendar and Meet setup automatically.</p>":"<p>Payment verified successfully.</p>")+meet
          );
-         setStatus(isAstro?astroStatus:status,"Payment verified. Please do not pay again. Contact support for rescheduling/refund.");
-         try{
-           localStorage.removeItem("theUnsaidPendingBooking");
-           sessionStorage.removeItem("theUnsaidBookingAccessToken_"+order.bookingId);
-         }catch(_){}
-         restoreSubmitButton(type,submit,"Payment received ✓");
-         return;
+         setStatus(isAstro?astroStatus:status,pending?"Payment verified. Booking reserved while the meeting link is created.":"Payment verified successfully.");
+         if(pending){
+           try{localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({bookingId:order.bookingId,type,session:sessionName,createdAt:Date.now()}))}catch(_){}
+           bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent="Payment received ✓";
+           void recoverPendingBooking(order.bookingId,type);
+         }else{
+           try{localStorage.removeItem("theUnsaidPendingBooking");sessionStorage.removeItem("theUnsaidBookingAccessToken_"+order.bookingId)}catch(_){}
+           restoreSubmitButton(type,submit,"Payment complete ✓");
+         }
+       }catch(err){
+         console.error("Payment verification; checking booking status:",err?.name||"request_error");
+         setStatus(isAstro?astroStatus:status,"We are checking your payment automatically. Please do not pay again.");
+         bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent="Checking payment status…";
+         const recovered=await recoverPendingBooking(order.bookingId,type);
+         if(!recovered){
+           setStatus(isAstro?astroStatus:status,"Your payment status is still being checked. Please do not pay again; your booking remains under review.");
+           submit.disabled=true;submit.textContent="Payment status pending";
+         }
        }
-       showSuccess(target,
-         "<h4>"+(pending?"Payment received — booking reserved ✓":"Booking confirmed ✓")+"</h4>"+
-         "<p><strong>"+escapeHtml(verified.session)+"</strong></p>"+
-         "<p>"+escapeHtml(verified.date)+" · "+escapeHtml(prettyTime(verified.time))+"</p>"+
-         "<p>Booking ID: "+escapeHtml(verified.bookingId)+"</p>"+
-         (verified.meetLink?"<p>Your Google Meet link is ready.</p>":pending?"<p>Your payment is verified and your slot is reserved. The Google Meet link is being created; please keep this booking ID for reference.</p>":"<p>Payment verified successfully.</p>")+meet
-       );
-       setStatus(isAstro?astroStatus:status,pending?"Payment verified. Booking reserved while the meeting link is created.":"Payment verified successfully.");
-       if(!pending){
-         try{
-           localStorage.removeItem("theUnsaidPendingBooking");
-           sessionStorage.removeItem("theUnsaidBookingAccessToken_"+order.bookingId);
-         }catch(_){}
-       }
-       restoreSubmitButton(type,submit,pending?"Payment received ✓":"Payment complete ✓");
      }
    };
    const rzp=new Razorpay(options);
