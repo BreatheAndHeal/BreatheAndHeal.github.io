@@ -1,7 +1,6 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
 const { SESSIONS, json, handleOptions, isValidISODate, isValidHHMM } = require("../lib/config");
-const { confirmPaidBooking } = require("../lib/confirm-booking");
 const { allowRequest } = require("../lib/rate-limit");
 
 function safeEqualHex(a,b){
@@ -91,36 +90,41 @@ module.exports = async (req,res) => {
       return json(res,409,{error:"Payment is not captured yet. Please wait a moment; do not pay again."});
 
     await sql`UPDATE bookings
-      SET razorpay_payment_id=${razorpay_payment_id},
+      SET razorpay_payment_id=COALESCE(razorpay_payment_id,${razorpay_payment_id}),
           payment_status='paid',
-          booking_status='paid_pending_confirmation',
+          booking_status=CASE
+            WHEN booking_status IN ('confirmed','paid_slot_conflict','calendar_processing') THEN booking_status
+            ELSE 'paid_pending_confirmation'
+          END,
           paid_at=COALESCE(paid_at,NOW()),
           expires_at=NULL,
-          updated_at=NOW()
+          updated_at=CASE WHEN booking_status='calendar_processing' THEN updated_at ELSE NOW() END
       WHERE id=${bookingId}`;
 
     await sql`UPDATE slot_locks SET expires_at=NULL WHERE booking_id=${bookingId}`;
 
-    const confirmation=await confirmPaidBooking(bookingId);
-    const fresh=(await sql`SELECT * FROM bookings WHERE id=${bookingId} LIMIT 1`);
+    // Acknowledge payment once verified; booking-status handles Calendar/Meet work.
+    const fresh=await sql`SELECT * FROM bookings WHERE id=${bookingId} LIMIT 1`;
     const current=fresh[0]||booking;
+    const slotConflict=current.booking_status==="paid_slot_conflict";
+    const confirmed=current.booking_status==="confirmed" && Boolean(current.meet_link);
 
     return json(res,200,{
       ok:true,
-      pending:!confirmation.confirmed,
+      pending:!confirmed&&!slotConflict,
       bookingId,
       service:current.service,
       session:current.session_name,
       date:String(current.booking_date).slice(0,10),
       time:String(current.booking_time).slice(0,5),
-      meetLink:confirmation.meetLink||current.meet_link||null,
-      calendarPending:!confirmation.confirmed && !confirmation.slotConflict,
-      slotConflict:Boolean(confirmation.slotConflict),
-      message:confirmation.slotConflict
+      meetLink:current.meet_link||null,
+      calendarPending:!confirmed&&!slotConflict,
+      slotConflict,
+      message:slotConflict
         ? "Payment was verified, but the selected slot became unavailable before confirmation. Please do not pay again; contact support."
-        : confirmation.confirmed
+        : confirmed
           ? "Payment verified and booking confirmed."
-          : "Payment verified. Your booking is reserved, and the Google Meet link is still being created."
+          : "Payment verified. Your booking is reserved while Google Calendar and Meet setup completes."
     });
   }catch(err){
     console.error(err);
