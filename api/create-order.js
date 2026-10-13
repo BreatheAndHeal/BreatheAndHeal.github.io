@@ -124,6 +124,16 @@ module.exports = async (req,res) => {
     });
     const order=await rr.json();
     if(!rr.ok || !order.id){
+      // Log only the provider's sanitized error metadata for Preview diagnostics.
+      // Never log API keys, Authorization headers, or the full request/response.
+      console.error("Razorpay order creation failed", {
+        httpStatus: rr.status,
+        code: order?.error?.code || null,
+        description: order?.error?.description || null,
+        source: order?.error?.source || null,
+        step: order?.error?.step || null,
+        reason: order?.error?.reason || null
+      });
       await sql`DELETE FROM bookings WHERE id=${bookingId}`;
       return json(res,502,{error:"Could not create the payment order. Please try again."});
     }
