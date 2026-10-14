@@ -108,7 +108,7 @@ function createStagingMeetEvent(body) {
   const end = new Date(start.getTime() + duration * 60 * 1000);
   const created = Calendar.Events.insert({
     summary: "[STAGING TEST] " + sessionName,
-    description: "The Unsaid Cloudflare Preview test event. No customer emails are sent.\nTest booking reference: " + bookingId,
+    description: "The Unsaid Cloudflare Preview test event. Emails, if enabled, are sent only to STAGING_TEST_EMAIL.\nTest booking reference: " + bookingId,
     start: { dateTime: start.toISOString(), timeZone: TIME_ZONE },
     end: { dateTime: end.toISOString(), timeZone: TIME_ZONE },
     conferenceData: {
@@ -132,14 +132,180 @@ function createStagingMeetEvent(body) {
     throw new Error("Google Meet link was not created for the staging test event.");
   }
 
+  // Staging email sends are hard-routed to one configured test inbox.
+  // The booking customer's real email is shown only inside the test message;
+  // it is never used as an email recipient by this staging script.
+  const emailStatus = sendStagingEmails({
+    bookingId,
+    sessionName,
+    date,
+    time,
+    duration,
+    customerName: String(body.customerName || "Test customer").slice(0, 200),
+    customerEmail: String(body.customerEmail || "").slice(0, 320),
+    amount: Number(body.amount || 0),
+    meetLink
+  });
+
   return {
     ok: true,
     eventId: created.id,
     meetLink: meetLink,
-    customerEmailSent: false,
-    adminEmailSent: false,
-    emailError: null
+    customerEmailSent: emailStatus.customerEmailSent,
+    adminEmailSent: emailStatus.adminEmailSent,
+    emailError: emailStatus.emailError
   };
+}
+
+function sendStagingEmails(booking) {
+  const testRecipient = String(
+    PropertiesService.getScriptProperties().getProperty("STAGING_TEST_EMAIL") || ""
+  ).trim();
+
+  if (!isValidEmail(testRecipient)) {
+    return {
+      customerEmailSent: false,
+      adminEmailSent: false,
+      emailError: "Add a valid STAGING_TEST_EMAIL script property to enable safe staging email tests."
+    };
+  }
+
+  const safe = {
+    bookingId: String(booking.bookingId || "").slice(0, 120),
+    sessionName: String(booking.sessionName || "Staging test session").slice(0, 150),
+    date: String(booking.date || ""),
+    time: String(booking.time || ""),
+    duration: Number(booking.duration || 0),
+    customerName: String(booking.customerName || "Test customer").slice(0, 200),
+    customerEmail: String(booking.customerEmail || "Not supplied").slice(0, 320),
+    amount: Number(booking.amount || 0),
+    meetLink: String(booking.meetLink || "")
+  };
+
+  const dateTime = safe.date + " at " + safe.time + " (Asia/Kolkata)";
+  const amountText = safe.amount > 0 ? "₹" + safe.amount : "Test booking";
+  const escaped = {
+    bookingId: htmlEscape(safe.bookingId),
+    sessionName: htmlEscape(safe.sessionName),
+    dateTime: htmlEscape(dateTime),
+    customerName: htmlEscape(safe.customerName),
+    customerEmail: htmlEscape(safe.customerEmail),
+    amountText: htmlEscape(amountText),
+    meetLink: htmlEscape(safe.meetLink)
+  };
+
+  let customerEmailSent = false;
+  let adminEmailSent = false;
+  const errors = [];
+
+  const customerSubject = "[STAGING TEST] Customer booking confirmation — " + safe.bookingId;
+  const customerBody =
+    "THE UNSAID — STAGING TEST EMAIL\n\n" +
+    "This is a test copy of the customer confirmation email. It was sent only to the configured staging test inbox; no email was sent to the actual customer.\n\n" +
+    "Hi " + safe.customerName + ",\n\n" +
+    "Your test booking is confirmed.\n\n" +
+    "Session: " + safe.sessionName + "\n" +
+    "Date and time: " + dateTime + "\n" +
+    "Duration: " + safe.duration + " minutes\n" +
+    "Amount: " + amountText + "\n" +
+    "Booking reference: " + safe.bookingId + "\n" +
+    "Google Meet: " + safe.meetLink + "\n\n" +
+    "This is a staging test. No real appointment/customer notification has been sent.";
+  const customerHtml =
+    '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#27312b;line-height:1.6">' +
+    '<p style="font-size:11px;letter-spacing:2px;color:#68736b">THE UNSAID · STAGING TEST</p>' +
+    '<h2 style="font-weight:600">Your test booking is confirmed</h2>' +
+    '<p>This is a test copy of the customer confirmation email. It was sent only to the configured staging test inbox; no email was sent to the actual customer.</p>' +
+    '<p>Hi ' + escaped.customerName + ',</p>' +
+    '<table style="border-collapse:collapse;width:100%">' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Session</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.sessionName + '</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Date and time</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.dateTime + '</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Duration</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + safe.duration + ' minutes</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Amount</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.amountText + '</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Booking reference</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.bookingId + '</td></tr>' +
+    '</table>' +
+    '<p><a href="' + escaped.meetLink + '" style="display:inline-block;padding:12px 18px;background:#27312b;color:#fff;text-decoration:none;border-radius:24px">Open Google Meet</a></p>' +
+    '<p style="font-size:12px;color:#68736b">Staging test only. No real customer notification has been sent.</p></div>';
+
+  try {
+    MailApp.sendEmail({ to: testRecipient, subject: customerSubject, body: customerBody, htmlBody: customerHtml, name: "The Unsaid — Staging Test" });
+    customerEmailSent = true;
+  } catch (error) {
+    errors.push("Customer-template test email failed.");
+    console.error("Staging customer email failed: " + (error && error.message ? error.message : "Unknown error"));
+  }
+
+  const adminSubject = "[STAGING TEST] New paid booking — " + safe.bookingId;
+  const adminBody =
+    "THE UNSAID — STAGING ADMIN TEST EMAIL\n\n" +
+    "This is a test copy of the admin notification. It was sent only to the configured staging test inbox.\n\n" +
+    "Booking reference: " + safe.bookingId + "\n" +
+    "Session: " + safe.sessionName + "\n" +
+    "Date and time: " + dateTime + "\n" +
+    "Duration: " + safe.duration + " minutes\n" +
+    "Amount: " + amountText + "\n" +
+    "Test customer name: " + safe.customerName + "\n" +
+    "Test customer email entered on form: " + safe.customerEmail + "\n" +
+    "Google Meet: " + safe.meetLink + "\n\n" +
+    "Staging test only — do not treat this as a real customer appointment.";
+  const adminHtml =
+    '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#27312b;line-height:1.6">' +
+    '<p style="font-size:11px;letter-spacing:2px;color:#68736b">THE UNSAID · STAGING TEST</p>' +
+    '<h2 style="font-weight:600">New paid booking — test notification</h2>' +
+    '<p>This is a test copy of the admin notification. It was sent only to the configured staging test inbox.</p>' +
+    '<table style="border-collapse:collapse;width:100%">' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Booking reference</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.bookingId + '</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Session</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.sessionName + '</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Date and time</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.dateTime + '</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Duration</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + safe.duration + ' minutes</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Amount</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.amountText + '</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Test customer name</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.customerName + '</td></tr>' +
+    '<tr><td style="padding:8px;border-bottom:1px solid #ddd6ca">Email entered on form</td><td style="padding:8px;border-bottom:1px solid #ddd6ca">' + escaped.customerEmail + '</td></tr>' +
+    '</table>' +
+    '<p><a href="' + escaped.meetLink + '" style="display:inline-block;padding:12px 18px;background:#27312b;color:#fff;text-decoration:none;border-radius:24px">Open Google Meet</a></p>' +
+    '<p style="font-size:12px;color:#68736b">Staging test only — not a real customer appointment.</p></div>';
+
+  try {
+    MailApp.sendEmail({ to: testRecipient, subject: adminSubject, body: adminBody, htmlBody: adminHtml, name: "The Unsaid — Staging Test" });
+    adminEmailSent = true;
+  } catch (error) {
+    errors.push("Admin-template test email failed.");
+    console.error("Staging admin email failed: " + (error && error.message ? error.message : "Unknown error"));
+  }
+
+  return {
+    customerEmailSent: customerEmailSent,
+    adminEmailSent: adminEmailSent,
+    emailError: errors.length ? errors.join(" ") : null
+  };
+}
+
+function authorizeStagingEmail() {
+  const testRecipient = String(
+    PropertiesService.getScriptProperties().getProperty("STAGING_TEST_EMAIL") || ""
+  ).trim();
+  if (!isValidEmail(testRecipient)) {
+    throw new Error("Add a valid STAGING_TEST_EMAIL script property before authorizing email.");
+  }
+  const quota = MailApp.getRemainingDailyQuota();
+  Logger.log("Staging email permission is ready. Remaining recipient quota: " + quota);
+  return { ok: true, testRecipient: testRecipient, remainingRecipientQuota: quota };
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function htmlEscape(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (character) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[character];
+  });
 }
 
 function pad2(value) {
