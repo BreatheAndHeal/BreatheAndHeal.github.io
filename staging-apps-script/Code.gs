@@ -292,6 +292,25 @@ function authorizeStagingEmail() {
   return { ok: true, testRecipient: testRecipient, remainingRecipientQuota: quota };
 }
 
+function testStagingEmailTemplates() {
+  const now = new Date();
+  const date = Utilities.formatDate(now, TIME_ZONE, "yyyy-MM-dd");
+  const time = Utilities.formatDate(now, TIME_ZONE, "HH:mm");
+  const result = sendStagingEmails({
+    bookingId: "STAGING-EMAIL-TEST-" + Utilities.getUuid().slice(0, 8),
+    sessionName: "Focused Conversation — 30 min (email template test)",
+    date: date,
+    time: time,
+    duration: 30,
+    customerName: "Test Customer",
+    customerEmail: "test-customer@example.com",
+    amount: 499,
+    meetLink: "https://example.com/staging-email-test-only"
+  });
+  Logger.log(JSON.stringify(result));
+  return result;
+}
+
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 }
