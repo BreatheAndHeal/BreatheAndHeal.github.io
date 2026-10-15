@@ -320,11 +320,13 @@ function createProductionMeetEvent(body) {
     }
 
     const emailError = errors.length ? errors.join(" ") : null;
+    // The Calendar/Meet appointment exists at this point. Keep the booking
+    // response successful even if a notification provider temporarily fails;
+    // otherwise the booking API might retry availability checks and mistake
+    // this newly created event for a slot conflict. Email delivery status is
+    // returned separately for monitoring.
     return {
-      // If one email fails, report failure so the booking adapter can retry.
-      // The stored event ID and sent flags make retries idempotent.
-      ok: !emailError,
-      error: emailError,
+      ok: true,
       eventId: created.id,
       meetLink: meetLink,
       customerEmailSent: Boolean(record.customerEmailSent),
