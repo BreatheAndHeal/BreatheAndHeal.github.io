@@ -2,63 +2,84 @@ const { sql } = require("../lib/db");
 const { handleOptions, json } = require("../lib/config");
 const { confirmPaidBooking } = require("../lib/confirm-booking");
 const { verifyBookingAccessToken } = require("../lib/booking-access");
+const { allowRequest } = require("../lib/rate-limit");
 
-async function recoverCapturedPayment(booking){
+async function fetchRazorpayPayment(paymentId){
+  const keyId=process.env.RAZORPAY_KEY_ID;
+  const keySecret=process.env.RAZORPAY_KEY_SECRET;
+  if(!keyId || !keySecret) throw new Error("Payment verification is not configured.");
+  const auth=Buffer.from(keyId+":"+keySecret).toString("base64");
+  const response=await fetch("https://api.razorpay.com/v1/payments/"+encodeURIComponent(paymentId),{
+    headers:{Authorization:"Basic "+auth,Accept:"application/json"}
+  });
+  if(!response.ok){
+    console.error("Razorpay payment recovery lookup returned HTTP",response.status);
+    return null;
+  }
+  try{ return await response.json(); }catch(_){ return null; }
+}
+
+async function getCapturedPaymentForOrder(booking, explicitPaymentId){
   const keyId=process.env.RAZORPAY_KEY_ID;
   const keySecret=process.env.RAZORPAY_KEY_SECRET;
   const orderId=String(booking.razorpay_order_id||"");
-  if(!keyId || !keySecret || !orderId) return false;
+  if(!keyId || !keySecret || !orderId) return null;
 
-  // Avoid repeatedly querying Razorpay during the frontend's short polling loop.
   const lastUpdated=new Date(booking.updated_at).getTime();
-  if(Number.isFinite(lastUpdated) && Date.now()-lastUpdated<20000) return false;
+  // Browser polling uses a 5-second interval; throttle background list checks,
+  // but never throttle a one-time recovery using a supplied payment ID.
+  if(!explicitPaymentId && Number.isFinite(lastUpdated) && Date.now()-lastUpdated<20000) return null;
 
-  const auth=Buffer.from(keyId+":"+keySecret).toString("base64");
-  let response;
-  try{
-    response=await fetch("https://api.razorpay.com/v1/orders/"+encodeURIComponent(orderId)+"/payments",{
-      headers:{Authorization:"Basic "+auth,Accept:"application/json"}
-    });
-  }catch(err){
-    console.error("Razorpay order-payment lookup failed.");
-    return false;
+  let candidates=[];
+  if(explicitPaymentId){
+    if(!/^pay_[A-Za-z0-9]+$/.test(explicitPaymentId)) return null;
+    const payment=await fetchRazorpayPayment(explicitPaymentId);
+    if(payment) candidates=[payment];
+  }else{
+    const auth=Buffer.from(keyId+":"+keySecret).toString("base64");
+    let response;
+    try{
+      response=await fetch("https://api.razorpay.com/v1/orders/"+encodeURIComponent(orderId)+"/payments",{
+        headers:{Authorization:"Basic "+auth,Accept:"application/json"}
+      });
+    }catch(_){
+      console.error("Razorpay order-payment recovery lookup failed.");
+      return null;
+    }
+    if(!response.ok){
+      console.error("Razorpay order-payment recovery returned HTTP",response.status);
+      return null;
+    }
+    let result;
+    try{result=await response.json();}catch(_){return null;}
+    candidates=Array.isArray(result?.items)?result.items:[];
   }
-
-  if(!response.ok){
-    console.error("Razorpay order-payment lookup returned HTTP",response.status);
-    return false;
-  }
-
-  let result;
-  try{ result=await response.json(); }
-  catch(_){ return false; }
 
   const expectedAmount=Number(booking.amount_inr)*100;
-  const captured=(Array.isArray(result?.items)?result.items:[]).find(payment=>
+  const captured=candidates.find(payment=>
     payment &&
     payment.order_id===orderId &&
     payment.status==="captured" &&
     payment.currency==="INR" &&
     Number(payment.amount)===expectedAmount &&
     typeof payment.id==="string" &&
-    payment.id.length>0
+    payment.id.length>0 &&
+    (!explicitPaymentId || payment.id===explicitPaymentId)
   );
 
   if(!captured){
-    // Recheck at most once every ~20 seconds while the browser is polling.
-    await sql`UPDATE bookings
-      SET updated_at=NOW()
-      WHERE id=${booking.id}
-        AND payment_status <> 'paid'`;
-    return false;
+    // Throttle failed list lookups during automatic browser polling.
+    if(!explicitPaymentId){
+      await sql`UPDATE bookings
+        SET updated_at=NOW()
+        WHERE id=${booking.id}
+          AND payment_status <> 'paid'`;
+    }
+    return null;
   }
 
-  // Recovery path for a captured payment whose checkout callback/webhook was
-  // not persisted. Match the exact Razorpay order and expected amount before
-  // changing the booking to paid. The caller has already authenticated access
-  // to this booking with its per-booking access token.
   await sql`UPDATE bookings
-    SET razorpay_payment_id=COALESCE(razorpay_payment_id,${captured.id}),
+    SET razorpay_payment_id=${captured.id},
         payment_status='paid',
         booking_status=CASE
           WHEN booking_status IN ('confirmed','paid_slot_conflict','calendar_processing') THEN booking_status
@@ -71,11 +92,20 @@ async function recoverCapturedPayment(booking){
       AND razorpay_order_id=${orderId}
       AND payment_status <> 'paid'`;
 
+  // Also repair an inconsistent/missing payment ID if the same valid captured
+  // payment was already recorded as paid for this exact order.
+  await sql`UPDATE bookings
+    SET razorpay_payment_id=${captured.id}, updated_at=NOW()
+    WHERE id=${booking.id}
+      AND razorpay_order_id=${orderId}
+      AND payment_status='paid'
+      AND (razorpay_payment_id IS NULL OR razorpay_payment_id=${captured.id})`;
+
   await sql`UPDATE slot_locks
     SET expires_at=NULL
     WHERE booking_id=${booking.id}`;
 
-  return true;
+  return captured.id;
 }
 
 module.exports = async (req,res) => {
@@ -84,11 +114,20 @@ module.exports = async (req,res) => {
 
   try{
     const bookingId=String(req.query?.bookingId||"").trim();
+    const recoveryPaymentId=String(req.query?.paymentId||"").trim();
     if(!bookingId) return json(res,400,{error:"Missing bookingId."});
 
     const accessToken=String(req.headers["x-booking-access-token"]||"");
-    if(!verifyBookingAccessToken(bookingId,accessToken)){
+    const hasValidAccess=verifyBookingAccessToken(bookingId,accessToken);
+    // For a one-time recovery without the browser's original session token,
+    // require a concrete payment ID and verify it against Razorpay's API,
+    // including the exact order ID and expected amount. No Meet link or PII is
+    // returned on this possession-verified recovery path.
+    if(!hasValidAccess && !recoveryPaymentId){
       return json(res,401,{error:"Booking access is not authorized."});
+    }
+    if(!hasValidAccess && !allowRequest(req,"booking-payment-recovery",5,10*60*1000)){
+      return json(res,429,{error:"Too many recovery attempts. Please wait and try again."});
     }
 
     const selectBooking=()=>sql`SELECT id,service,session_name,booking_date,booking_time,
@@ -97,16 +136,23 @@ module.exports = async (req,res) => {
       FROM bookings WHERE id=${bookingId} LIMIT 1`;
 
     let rows=await selectBooking();
-    let calendarError=null;
-
     let booking=rows[0];
     if(!booking) return json(res,404,{error:"Booking not found."});
+    let calendarError=null;
+    let recovered=false;
 
-    // If checkout reported success but its callback didn't persist the payment,
-    // confirm directly against Razorpay's authenticated order-payment endpoint.
-    if(booking.payment_status!=="paid" && booking.razorpay_order_id){
+    if(recoveryPaymentId){
+      const verifiedPaymentId=await getCapturedPaymentForOrder(booking,recoveryPaymentId);
+      if(!verifiedPaymentId){
+        return json(res,409,{
+          ok:false,
+          error:"Razorpay could not verify a captured payment matching this booking and amount. No booking change was made."
+        });
+      }
+      recovered=true;
+    }else if(booking.payment_status!=="paid" && booking.razorpay_order_id){
       try{
-        await recoverCapturedPayment(booking);
+        recovered=Boolean(await getCapturedPaymentForOrder(booking,null));
         rows=await selectBooking();
         booking=rows[0]||booking;
       }catch(err){
@@ -124,7 +170,22 @@ module.exports = async (req,res) => {
         booking=rows[0]||booking;
       }catch(err){
         console.error("booking-status calendar retry:",err);
+        calendarError="Calendar/Meet confirmation is still pending.";
       }
+    }
+
+    // A recovery URL without the booking access token confirms only that the
+    // verified transaction was reconciled; it never exposes the Meet URL.
+    if(!hasValidAccess){
+      return json(res,200,{
+        ok:true,
+        recovered,
+        paymentStatus:booking.payment_status,
+        bookingStatus:booking.booking_status,
+        confirmed:booking.booking_status==="confirmed" && Boolean(booking.meet_link),
+        calendarPending:booking.payment_status==="paid" && booking.booking_status!=="confirmed",
+        calendarError
+      });
     }
 
     return json(res,200,{
