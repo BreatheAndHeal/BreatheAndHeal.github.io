@@ -150,6 +150,8 @@ module.exports = async (req,res) => {
         });
       }
       recovered=true;
+      rows=await selectBooking();
+      booking=rows[0]||booking;
     }else if(booking.payment_status!=="paid" && booking.razorpay_order_id){
       try{
         recovered=Boolean(await getCapturedPaymentForOrder(booking,null));
