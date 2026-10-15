@@ -319,13 +319,17 @@ function createProductionMeetEvent(body) {
       }
     }
 
+    const emailError = errors.length ? errors.join(" ") : null;
     return {
-      ok: true,
+      // If one email fails, report failure so the booking adapter can retry.
+      // The stored event ID and sent flags make retries idempotent.
+      ok: !emailError,
+      error: emailError,
       eventId: created.id,
       meetLink: meetLink,
       customerEmailSent: Boolean(record.customerEmailSent),
       adminEmailSent: Boolean(record.adminEmailSent),
-      emailError: errors.length ? errors.join(" ") : null
+      emailError: emailError
     };
   } finally {
     lock.releaseLock();
