@@ -399,7 +399,7 @@ function escapeHtml(value){
 function showSuccess(box,html){box.innerHTML=html;box.classList.add("show");box.scrollIntoView({behavior:"smooth",block:"nearest"})}
 function supportMessage(){return "theunsaid.care@gmail.com · alternate: theunsaid.care@gmail.com · 7905806974"}
 
-async function recoverPendingBooking(bookingId,type){
+async function recoverPendingBooking(bookingId,type,paymentId){
  const isAstro=type==="astrology";
  const accessToken=sessionStorage.getItem("theUnsaidBookingAccessToken_"+bookingId)||"";
  const target=isAstro?astrologySuccess:emotionalSuccess;
@@ -414,7 +414,9 @@ async function recoverPendingBooking(bookingId,type){
      const timeoutId=setTimeout(()=>controller.abort(),15000);
      let r,data;
      try{
-       r=await fetch(API_BASE+"/api/booking-status?bookingId="+encodeURIComponent(bookingId),{
+       const statusUrl=API_BASE+"/api/booking-status?bookingId="+encodeURIComponent(bookingId)+
+         (paymentId?"&paymentId="+encodeURIComponent(paymentId):"");
+       r=await fetch(statusUrl,{
          headers:{"Accept":"application/json","X-Booking-Access-Token":accessToken},
          cache:"no-store",
          signal:controller.signal
@@ -590,7 +592,9 @@ async function startPayment({formData,type}){
          console.error("Payment verification; checking booking status:",err?.name||"request_error");
          setStatus(isAstro?astroStatus:status,"We are checking your payment automatically. Please do not pay again.");
          bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent="Checking payment status…";
-         const recovered=await recoverPendingBooking(order.bookingId,type);
+         // Pass Razorpay payment ID into recovery if checkout verification timed out.
+         // The server independently validates captured status, order ID, and amount.
+         const recovered=await recoverPendingBooking(order.bookingId,type,response?.razorpay_payment_id||"");
          if(!recovered){
            setStatus(isAstro?astroStatus:status,"Your payment status is still being checked. Please do not pay again; your booking remains under review.");
            submit.disabled=true;submit.textContent="Payment status pending";
