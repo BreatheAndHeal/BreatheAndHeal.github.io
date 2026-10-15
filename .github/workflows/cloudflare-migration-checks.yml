@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - migration/cloudflare-staging
+      - migration/cloudflare-preview
   pull_request:
     branches:
       - main
