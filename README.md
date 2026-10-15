@@ -7,6 +7,7 @@ A calm, private online space for honest conversations, emotional support and per
 - Primary email: tatttvamasii@gmail.com
 - Alternate email: healing2411@gmail.com
 - GitHub Pages source: main / root
+- Cloudflare migration: tested from `migration/cloudflare-preview`
 - SEO discovery: robots.txt + sitemap.xml
 - Booking: live slot booking, Razorpay payment verification, Calendar/Meet confirmation and email notifications
 - Payment: Razorpay Checkout with server-side verification and captured-payment webhook
