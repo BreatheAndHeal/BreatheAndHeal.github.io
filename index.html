@@ -447,6 +447,28 @@ async function recoverPendingBooking(bookingId,type){
        const paymentPaid=data.paymentStatus==="paid";
        const confirmed=data.bookingStatus==="confirmed";
        const meetUrl=safeMeetUrl(data.meetLink);
+       if(!paymentPaid && !confirmed &&
+          (data.paymentAttemptStatus==="failed" || data.paymentAttemptStatus==="not_started")){
+         const failed=data.paymentAttemptStatus==="failed";
+         showSuccess(target,
+           "<h4>"+(failed?"Payment attempt failed":"Payment was not started")+"</h4>"+
+           "<p><strong>"+escapeHtml(data.session)+"</strong></p>"+
+           "<p>"+escapeHtml(data.date)+" · "+escapeHtml(prettyTime(data.time))+"</p>"+
+           "<p>Booking ID: "+escapeHtml(data.bookingId)+"</p>"+
+           "<p>"+(failed
+             ?"Razorpay reports that no successful payment was made for this attempt. Your booking is not confirmed."
+             :"Razorpay has no payment attempt recorded for this booking. Your booking is not confirmed.")+"</p>"+
+           "<p>To retry, use the same email, session, date and time in the booking form. The system will reuse the existing unpaid order while its slot hold is active. Do not pay again if your bank or Razorpay shows a successful debit.</p>"
+         );
+         setStatus(statusEl,failed
+           ?"Payment failed. The booking is not confirmed; re-enter the same booking details to retry safely."
+           :"No payment was recorded. The booking is not confirmed; re-enter the same booking details to continue.");
+         const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
+         const saved=readStoredRetryOrder(type);
+         if(saved?.bookingId===bookingId) retryableOrders[type]=saved;
+         restoreSubmitButton(type,submit,saved?.bookingId===bookingId?"Retry payment →":"Continue to payment →");
+         return false;
+       }
        const meet=meetUrl?
          '<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
 
@@ -519,10 +541,14 @@ async function startPayment({formData,type}){
    let order=retryableOrders[type]||readStoredRetryOrder(type);
    const activeSavedOrder=Boolean(order&&Number.isFinite(Date.parse(order.expiresAt))&&Date.parse(order.expiresAt)>Date.now()+5000);
    const sameSavedForm=Boolean(order&&(order.formSnapshot?order.formSnapshot===formSnapshot:(formFingerprint&&order.formFingerprint===formFingerprint)));
+   // If form values were re-entered after a refresh, let the server decide
+   // whether this is the same unpaid booking/order. Never create a duplicate
+   // slot lock for an exact retry.
    if(activeSavedOrder&&!sameSavedForm){
-     throw new Error("Your previous payment attempt is still holding this slot. Use the original booking details to retry, or wait for the 10-minute hold to expire before changing them.");
+     order=null;
+     retryableOrders[type]=null;
    }
-   if(!activeSavedOrder){
+   if(!activeSavedOrder || !sameSavedForm){
      retryableOrders[type]=null;
      const orderResponse=await fetch(API_BASE+"/api/create-order",{
        method:"POST",
