@@ -431,7 +431,16 @@ async function recoverPendingBooking(bookingId,type,paymentId,options={}){
  const target=isAstro?astrologySuccess:emotionalSuccess;
  const statusEl=isAstro?astroStatus:status;
  const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
- if(!bookingId || !accessToken)return false;
+ if(!bookingId)return false;
+ if(!accessToken){
+   delete submit.dataset.paymentCheckBookingId;
+         delete submit.dataset.paymentCheckUnavailable;
+   submit.dataset.paymentCheckUnavailable="true";
+   bookingSubmissionPending[type]=false;
+   submit.disabled=true;submit.textContent="Status check unavailable";
+   setStatus(statusEl,"We couldn't securely check this booking in this browser session. Check your bank/UPI app. If money was debited or the transaction is pending, do not pay again; contact support with your Booking ID.");
+   return false;
+ }
  const maxAttempts=Math.max(1,Math.min(Number.isInteger(options.maxAttempts)?options.maxAttempts:8,24));
  const requestTimeoutMs=Math.max(3000,Math.min(Number(options.requestTimeoutMs)||8000,15000));
  const pollIntervalMs=Math.max(2000,Math.min(Number(options.pollIntervalMs)||4000,5000));
@@ -458,6 +467,7 @@ async function recoverPendingBooking(bookingId,type,paymentId,options={}){
      if(r.ok && data.ok){
        if(data.slotConflict){
          delete submit.dataset.paymentCheckBookingId;
+         delete submit.dataset.paymentCheckUnavailable;
          clearRetryableOrder(type,data.bookingId);
          showSuccess(target,
            "<h4>Payment received · slot needs rescheduling</h4>"+
@@ -475,6 +485,7 @@ async function recoverPendingBooking(bookingId,type,paymentId,options={}){
        if(!paymentPaid && !confirmed &&
           (data.paymentAttemptStatus==="failed" || data.paymentAttemptStatus==="not_started")){
          delete submit.dataset.paymentCheckBookingId;
+         delete submit.dataset.paymentCheckUnavailable;
          const failed=data.paymentAttemptStatus==="failed";
          showSuccess(target,
            "<h4>"+(failed?"Payment attempt failed":"Payment was not started")+"</h4>"+
@@ -496,6 +507,7 @@ async function recoverPendingBooking(bookingId,type,paymentId,options={}){
        }
        if(paymentPaid || confirmed){
          delete submit.dataset.paymentCheckBookingId;
+         delete submit.dataset.paymentCheckUnavailable;
          paymentKnown=true;
          if(confirmed){
            clearRetryableOrder(type,data.bookingId);
@@ -618,7 +630,7 @@ async function startPayment({formData,type}){
        setStatus(isAstro?astroStatus:status,"Checkout closed. Checking whether Razorpay recorded a successful payment…");
        submit.disabled=true;submit.textContent="Checking payment status…";
        await recoverPendingBooking(order.bookingId,type,undefined,{maxAttempts:8,requestTimeoutMs:8000,pollIntervalMs:4000});
-       if(!submit.dataset.paymentCheckBookingId &&
+       if(!submit.dataset.paymentCheckBookingId && !submit.dataset.paymentCheckUnavailable &&
           !submit.textContent.includes("Payment received") &&
           !submit.textContent.includes("Payment complete") &&
           !submit.textContent.includes("Checking payment status…"))
@@ -688,7 +700,7 @@ async function startPayment({formData,type}){
          // Pass Razorpay payment ID into recovery if checkout verification timed out.
          // The server independently validates captured status, order ID, and amount.
          const recovered=await recoverPendingBooking(order.bookingId,type,response?.razorpay_payment_id||"");
-         if(!recovered && !submit.dataset.paymentCheckBookingId && submit.textContent==="Checking payment status…"){
+         if(!recovered && !submit.dataset.paymentCheckBookingId && !submit.dataset.paymentCheckUnavailable && submit.textContent==="Checking payment status…"){
            setStatus(isAstro?astroStatus:status,"Your payment status could not be confirmed yet. Do not pay again if your bank/UPI app shows a debit or pending transaction. Use Check payment status to check again.");
            submit.disabled=!hasBookingConsent(type);
            submit.dataset.paymentCheckBookingId=order.bookingId;
@@ -714,7 +726,9 @@ async function startPayment({formData,type}){
 
 document.getElementById("booking").addEventListener("submit",e=>{
  e.preventDefault();
- const checkBookingId=document.getElementById("emotionalSubmit").dataset.paymentCheckBookingId;
+ const emotionalSubmit=document.getElementById("emotionalSubmit");
+ const checkBookingId=emotionalSubmit.dataset.paymentCheckBookingId;
+ if(emotionalSubmit.dataset.paymentCheckUnavailable){setStatus(status,"Payment status could not be checked in this browser session. Do not retry if any debit or pending transaction exists; contact support.");return;}
  if(checkBookingId){void recoverPendingBooking(checkBookingId,"emotional");return;}
  const q=id=>document.getElementById(id).value;
  if(!q("time")){setStatus(status,"Please choose an available time.");return}
@@ -736,7 +750,9 @@ document.getElementById("booking").addEventListener("submit",e=>{
 
 document.getElementById("astrologyBooking").addEventListener("submit",e=>{
  e.preventDefault();
- const checkBookingId=document.getElementById("astrologySubmit").dataset.paymentCheckBookingId;
+ const astrologySubmit=document.getElementById("astrologySubmit");
+ const checkBookingId=astrologySubmit.dataset.paymentCheckBookingId;
+ if(astrologySubmit.dataset.paymentCheckUnavailable){setStatus(astroStatus,"Payment status could not be checked in this browser session. Do not retry if any debit or pending transaction exists; contact support.");return;}
  if(checkBookingId){void recoverPendingBooking(checkBookingId,"astrology");return;}
  const q=id=>document.getElementById(id).value;
  if(!q("astroTime")){setStatus(astroStatus,"Please choose an available time.");return}
