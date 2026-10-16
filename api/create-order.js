@@ -78,6 +78,65 @@ module.exports = async (req,res) => {
     // Remove expired holds so slots become reusable.
     await sql`DELETE FROM slot_locks WHERE expires_at IS NOT NULL AND expires_at < NOW()`;
 
+    // A failed/cancelled checkout may be retried. If this exact customer,
+    // session and slot already has a live unpaid hold, reuse its existing
+    // booking and Razorpay order instead of attempting a second slot lock.
+    const requestedBlocks=toBlocks(time,meta.duration);
+    const blockers=new Map();
+    for(const block of requestedBlocks){
+      const lockedRows=await sql`
+        SELECT b.*, sl.expires_at AS slot_lock_expires_at
+        FROM slot_locks sl
+        INNER JOIN bookings b ON b.id=sl.booking_id
+        WHERE sl.slot_date=${date}
+          AND sl.slot_start=${block}
+          AND (sl.expires_at IS NULL OR sl.expires_at > NOW())
+        LIMIT 1
+      `;
+      if(lockedRows[0]) blockers.set(lockedRows[0].id,lockedRows[0]);
+    }
+
+    if(blockers.size){
+      const existing=blockers.size===1 ? [...blockers.values()][0] : null;
+      const sameRequestedSlot=Boolean(existing &&
+        String(existing.booking_date).slice(0,10)===date &&
+        String(existing.booking_time).slice(0,5)===time &&
+        existing.session_name===sessionName &&
+        existing.service===meta.service &&
+        Number(existing.duration_minutes)===Number(meta.duration));
+      const activeUnpaidHold=Boolean(existing &&
+        existing.payment_status!=="paid" &&
+        existing.booking_status==="pending" &&
+        existing.razorpay_order_id &&
+        existing.customer_email===email &&
+        sameRequestedSlot &&
+        existing.slot_lock_expires_at &&
+        new Date(existing.slot_lock_expires_at).getTime()>Date.now());
+
+      if(activeUnpaidHold){
+        const keyId=process.env.RAZORPAY_KEY_ID;
+        if(!keyId || !process.env.RAZORPAY_KEY_SECRET){
+          return json(res,500,{error:"Payment system is not configured yet."});
+        }
+        return json(res,200,{
+          bookingId:existing.id,
+          accessToken:createBookingAccessToken(existing.id),
+          orderId:existing.razorpay_order_id,
+          amount:Number(existing.amount_inr),
+          currency:"INR",
+          keyId,
+          expiresAt:existing.expires_at,
+          reused:true
+        });
+      }
+
+      if(existing && existing.payment_status==="paid"){
+        return json(res,409,{error:"Payment is already recorded or being confirmed for this slot. Please do not pay again; check the booking status or contact support."});
+      }
+
+      return json(res,409,{error:"This time overlaps an active booking hold. If this is your previous unpaid attempt, retry with the same email, session, date and time. Otherwise choose another available slot after the hold expires."});
+    }
+
     const bookingId=crypto.randomUUID();
     const expiresAt=new Date(Date.now()+10*60*1000).toISOString();
 
