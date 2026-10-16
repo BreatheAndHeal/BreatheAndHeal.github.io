@@ -5,6 +5,23 @@ const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
 
+function isPreviewHost(req){
+  let host=String(req.headers["x-forwarded-host"]||req.headers.host||"").split(",")[0].trim().toLowerCase();
+  if(!host){
+    try{host=new URL(req.url).hostname.toLowerCase()}catch(_){host=""}
+  }
+  host=host.replace(/:\\d+$/,"");
+  if(host.endsWith(".pages.dev")) return host!=="the-unsaid-bg2.pages.dev";
+  if(host.endsWith(".vercel.app")){
+    return !new Set([
+      "the-unsaid-alpha.vercel.app",
+      "the-unsaid-lologram24-9450.vercel.app",
+      "the-unsaid-git-main-lologram24-9450.vercel.app"
+    ]).has(host);
+  }
+  return false;
+}
+
 function normalizeDatabaseDate(value){
   if(value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0,10);
   const match=String(value||"").match(/^(\\d{4}-\\d{2}-\\d{2})/);
@@ -57,6 +74,13 @@ module.exports = async (req,res) => {
 
     const slotError=validateSlot(date,time,meta.duration);
     if(slotError) return json(res,400,{error:slotError});
+
+    const keyId=process.env.RAZORPAY_KEY_ID;
+    const keySecret=process.env.RAZORPAY_KEY_SECRET;
+    if(!keyId || !keySecret) return json(res,500,{error:"Payment system is not configured yet."});
+    if(keyId.startsWith("rzp_live_") && isPreviewHost(req)){
+      return json(res,503,{error:"Live payments are disabled on preview deployments. No checkout was started. Use the production site for real customers or configure Razorpay Test Mode for preview testing."});
+    }
 
     // Recheck the provider's Google Calendar immediately before creating the
     // payment order. This prevents an emergency/unavailable calendar event
@@ -120,10 +144,6 @@ module.exports = async (req,res) => {
         new Date(existing.slot_lock_expires_at).getTime()>Date.now());
 
       if(activeUnpaidHold){
-        const keyId=process.env.RAZORPAY_KEY_ID;
-        if(!keyId || !process.env.RAZORPAY_KEY_SECRET){
-          return json(res,500,{error:"Payment system is not configured yet."});
-        }
         return json(res,200,{
           bookingId:existing.id,
           accessToken:createBookingAccessToken(existing.id),
@@ -164,13 +184,6 @@ module.exports = async (req,res) => {
     } catch(err) {
       await sql`DELETE FROM bookings WHERE id=${bookingId}`;
       return json(res,409,{error:"That time was just booked. Please choose another available slot."});
-    }
-
-    const keyId=process.env.RAZORPAY_KEY_ID;
-    const keySecret=process.env.RAZORPAY_KEY_SECRET;
-    if(!keyId || !keySecret){
-      await sql`DELETE FROM bookings WHERE id=${bookingId}`;
-      return json(res,500,{error:"Payment system is not configured yet."});
     }
 
     const auth=Buffer.from(keyId+":"+keySecret).toString("base64");
