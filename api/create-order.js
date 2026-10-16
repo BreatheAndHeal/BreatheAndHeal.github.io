@@ -10,7 +10,7 @@ function isPreviewHost(req){
   if(!host){
     try{host=new URL(req.url).hostname.toLowerCase()}catch(_){host=""}
   }
-  host=host.replace(/:\\d+$/,"");
+  host=host.replace(/:\d+$/,"");
   if(host.endsWith(".pages.dev")) return host!=="the-unsaid-bg2.pages.dev";
   if(host.endsWith(".vercel.app")){
     return !new Set([
