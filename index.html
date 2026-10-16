@@ -859,11 +859,22 @@ document.addEventListener("keydown",e=>{
      localStorage.removeItem("theUnsaidPendingBooking");
      return;
    }
-   const selector=pending.type==="astrology"
+   const accessToken=sessionStorage.getItem("theUnsaidBookingAccessToken_"+pending.bookingId)||"";
+   const isAstro=pending.type==="astrology";
+   const statusEl=isAstro?astroStatus:status;
+   if(!accessToken){
+     // A localStorage marker can outlive its per-tab/session access token.
+     // Do not block a fresh booking form or assume the prior payment failed.
+     setStatus(statusEl,
+       "A previous booking attempt ("+pending.bookingId+") was saved from another browser session, so it cannot be checked automatically here. Before paying again for that booking, check your bank/UPI app. If money was debited or a transaction is pending, do not pay again; contact support with this Booking ID."
+     );
+     return;
+   }
+   const selector=isAstro
      ? '[data-service="astrology"]'
      : '[data-service="emotional"]';
    document.querySelector(selector)?.click();
-   recoverPendingBooking(pending.bookingId,pending.type);
+   void recoverPendingBooking(pending.bookingId,pending.type);
  }catch(err){console.error("pending booking recovery:",err)}
 })();
 
