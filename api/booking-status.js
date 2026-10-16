@@ -26,6 +26,7 @@ async function getCapturedPaymentForOrder(booking, explicitPaymentId){
   if(!keyId || !keySecret || !orderId) return null;
 
   const lastUpdated=new Date(booking.updated_at).getTime();
+  booking.paymentAttemptStatus="unknown";
   // Browser polling uses a 5-second interval; throttle background list checks,
   // but never throttle a one-time recovery using a supplied payment ID.
   if(!explicitPaymentId && Number.isFinite(lastUpdated) && Date.now()-lastUpdated<20000) return null;
@@ -56,6 +57,10 @@ async function getCapturedPaymentForOrder(booking, explicitPaymentId){
   }
 
   const expectedAmount=Number(booking.amount_inr)*100;
+  const orderAttempts=candidates.filter(payment=>payment && payment.order_id===orderId);
+  const amountMatchedAttempts=orderAttempts.filter(payment=>
+    payment.currency==="INR" && Number(payment.amount)===expectedAmount
+  );
   const captured=candidates.find(payment=>
     payment &&
     payment.order_id===orderId &&
@@ -68,7 +73,18 @@ async function getCapturedPaymentForOrder(booking, explicitPaymentId){
   );
 
   if(!captured){
-    // Throttle failed list lookups during automatic browser polling.
+    if(orderAttempts.length===0){
+      booking.paymentAttemptStatus="not_started";
+    }else if(amountMatchedAttempts.length>0 && amountMatchedAttempts.every(payment=>payment.status==="failed")){
+      booking.paymentAttemptStatus="failed";
+    }else if(amountMatchedAttempts.some(payment=>payment.status==="created" || payment.status==="authorized")){
+      booking.paymentAttemptStatus="pending";
+    }else{
+      booking.paymentAttemptStatus="unknown";
+    }
+    // Throttle provider list calls during browser polling. The attempted
+    // status is returned for this request, allowing the UI to stop waiting
+    // once Razorpay has definitively reported failure/no attempt.
     if(!explicitPaymentId){
       await sql`UPDATE bookings
         SET updated_at=NOW()
@@ -77,6 +93,7 @@ async function getCapturedPaymentForOrder(booking, explicitPaymentId){
     }
     return null;
   }
+  booking.paymentAttemptStatus="captured";
 
   await sql`UPDATE bookings
     SET razorpay_payment_id=${captured.id},
@@ -154,9 +171,12 @@ module.exports = async (req,res) => {
       booking=rows[0]||booking;
     }else if(booking.payment_status!=="paid" && booking.razorpay_order_id){
       try{
-        recovered=Boolean(await getCapturedPaymentForOrder(booking,null));
+        const capturedPaymentId=await getCapturedPaymentForOrder(booking,null);
+        const observedAttemptStatus=booking.paymentAttemptStatus||"unknown";
+        recovered=Boolean(capturedPaymentId);
         rows=await selectBooking();
         booking=rows[0]||booking;
+        booking.paymentAttemptStatus=observedAttemptStatus;
       }catch(err){
         console.error("booking-status payment recovery failed:",err);
       }
@@ -199,6 +219,7 @@ module.exports = async (req,res) => {
       time:String(booking.booking_time).slice(0,5),
       paymentStatus:booking.payment_status,
       bookingStatus:booking.booking_status,
+      paymentAttemptStatus:booking.payment_status==="paid" ? "captured" : (booking.paymentAttemptStatus||"unknown"),
       slotConflict:booking.booking_status==="paid_slot_conflict",
       meetLink:booking.meet_link||null,
       calendarError
