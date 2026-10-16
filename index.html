@@ -425,19 +425,34 @@ function escapeHtml(value){
 function showSuccess(box,html){box.innerHTML=html;box.classList.add("show");box.scrollIntoView({behavior:"smooth",block:"nearest"})}
 function supportMessage(){return "theunsaid.care@gmail.com · alternate: theunsaid.care@gmail.com · 7905806974"}
 
-async function recoverPendingBooking(bookingId,type,paymentId){
+async function recoverPendingBooking(bookingId,type,paymentId,options={}){
  const isAstro=type==="astrology";
  const accessToken=sessionStorage.getItem("theUnsaidBookingAccessToken_"+bookingId)||"";
  const target=isAstro?astrologySuccess:emotionalSuccess;
  const statusEl=isAstro?astroStatus:status;
  const submit=document.getElementById(isAstro?"astrologySubmit":"emotionalSubmit");
- if(!bookingId || !accessToken)return false;
+ if(!bookingId)return false;
+ if(!accessToken){
+   delete submit.dataset.paymentCheckBookingId;
+         delete submit.dataset.paymentCheckUnavailable;
+   submit.dataset.paymentCheckUnavailable="true";
+   bookingSubmissionPending[type]=false;
+   submit.disabled=true;submit.textContent="Status check unavailable";
+   setStatus(statusEl,"We couldn't securely check this booking in this browser session. Check your bank/UPI app. If money was debited or the transaction is pending, do not pay again; contact support with your Booking ID.");
+   return false;
+ }
+ const maxAttempts=Math.max(1,Math.min(Number.isInteger(options.maxAttempts)?options.maxAttempts:8,24));
+ const requestTimeoutMs=Math.max(3000,Math.min(Number(options.requestTimeoutMs)||8000,15000));
+ const pollIntervalMs=Math.max(2000,Math.min(Number(options.pollIntervalMs)||4000,5000));
+ bookingSubmissionPending[type]=true;
+ submit.disabled=true;submit.textContent="Checking payment status…";
+ setStatus(statusEl,"Checking whether Razorpay recorded a successful payment. Please do not pay again while this is checked.");
  let paymentKnown=false;
  let reservedShown=false;
- for(let i=0;i<24;i++){
+ for(let i=0;i<maxAttempts;i++){
    try{
      const controller=new AbortController();
-     const timeoutId=setTimeout(()=>controller.abort(),15000);
+     const timeoutId=setTimeout(()=>controller.abort(),requestTimeoutMs);
      let r,data;
      try{
        const statusUrl=API_BASE+"/api/booking-status?bookingId="+encodeURIComponent(bookingId)+
@@ -451,6 +466,8 @@ async function recoverPendingBooking(bookingId,type,paymentId){
      }finally{clearTimeout(timeoutId)}
      if(r.ok && data.ok){
        if(data.slotConflict){
+         delete submit.dataset.paymentCheckBookingId;
+         delete submit.dataset.paymentCheckUnavailable;
          clearRetryableOrder(type,data.bookingId);
          showSuccess(target,
            "<h4>Payment received · slot needs rescheduling</h4>"+
@@ -467,6 +484,8 @@ async function recoverPendingBooking(bookingId,type,paymentId){
        const confirmed=data.bookingStatus==="confirmed" && Boolean(data.meetLink);
        if(!paymentPaid && !confirmed &&
           (data.paymentAttemptStatus==="failed" || data.paymentAttemptStatus==="not_started")){
+         delete submit.dataset.paymentCheckBookingId;
+         delete submit.dataset.paymentCheckUnavailable;
          const failed=data.paymentAttemptStatus==="failed";
          showSuccess(target,
            "<h4>"+(failed?"Payment attempt failed":"Payment was not started")+"</h4>"+
@@ -487,6 +506,8 @@ async function recoverPendingBooking(bookingId,type,paymentId){
          return false;
        }
        if(paymentPaid || confirmed){
+         delete submit.dataset.paymentCheckBookingId;
+         delete submit.dataset.paymentCheckUnavailable;
          paymentKnown=true;
          if(confirmed){
            clearRetryableOrder(type,data.bookingId);
@@ -521,13 +542,21 @@ async function recoverPendingBooking(bookingId,type,paymentId){
        }
      }
    }catch(err){console.warn("Booking status check will retry:",err?.name||"request_error")}
-   if(i<23)await new Promise(resolve=>setTimeout(resolve,5000));
+   if(i<maxAttempts-1)await new Promise(resolve=>setTimeout(resolve,pollIntervalMs));
  }
- setStatus(statusEl,paymentKnown
-   ? "Payment verified and your slot is reserved. Google Meet setup is taking longer than expected; please do not pay again. Keep this page open or return later for recovery."
-   : "Payment status is still being checked. Please do not pay again; keep this page open or return later to check.");
- bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent=paymentKnown?"Payment received ✓":"Checking payment status…";
- return paymentKnown;
+ if(paymentKnown){
+   setStatus(statusEl,"Payment verified, but Google Meet setup is taking longer than expected. Please do not pay again; keep this page open or return later for recovery.");
+   bookingSubmissionPending[type]=true;submit.disabled=true;submit.textContent="Payment received ✓";
+   return true;
+ }
+ const saved=readStoredRetryOrder(type);
+ if(saved?.bookingId===bookingId)retryableOrders[type]=saved;
+ submit.dataset.paymentCheckBookingId=bookingId;
+ bookingSubmissionPending[type]=false;
+ submit.disabled=!hasBookingConsent(type);
+ submit.textContent="Check payment status →";
+ setStatus(statusEl,"We couldn't confirm a completed payment yet. Check your bank or UPI app. If a payment is pending or money was debited, do not pay again. Tap “Check payment status” to check again; retry only after your bank/UPI app confirms there is no pending transaction and no debit.");
+ return false;
 }
 
 async function startPayment({formData,type}){
@@ -598,9 +627,13 @@ async function startPayment({formData,type}){
      notes:{booking_id:order.bookingId},
      theme:{color:"#27312b"},
      modal:{ondismiss:async()=>{
-       restoreSubmitButton(type,submit,"Checking payment status…");
-       await recoverPendingBooking(order.bookingId,type);
-       if(!submit.textContent.includes("Payment received") && !submit.textContent.includes("Payment complete"))
+       setStatus(isAstro?astroStatus:status,"Checkout closed. Checking whether Razorpay recorded a successful payment…");
+       submit.disabled=true;submit.textContent="Checking payment status…";
+       await recoverPendingBooking(order.bookingId,type,undefined,{maxAttempts:8,requestTimeoutMs:8000,pollIntervalMs:4000});
+       if(!submit.dataset.paymentCheckBookingId && !submit.dataset.paymentCheckUnavailable &&
+          !submit.textContent.includes("Payment received") &&
+          !submit.textContent.includes("Payment complete") &&
+          !submit.textContent.includes("Checking payment status…"))
          submit.textContent=retryOrderIsValid(type,formData)?"Retry payment →":"Continue to payment →";
      }},
      handler:async function(response){
@@ -667,9 +700,12 @@ async function startPayment({formData,type}){
          // Pass Razorpay payment ID into recovery if checkout verification timed out.
          // The server independently validates captured status, order ID, and amount.
          const recovered=await recoverPendingBooking(order.bookingId,type,response?.razorpay_payment_id||"");
-         if(!recovered){
-           setStatus(isAstro?astroStatus:status,"Your payment status is still being checked. Please do not pay again; your booking remains under review.");
-           submit.disabled=true;submit.textContent="Payment status pending";
+         if(!recovered && !submit.dataset.paymentCheckBookingId && !submit.dataset.paymentCheckUnavailable && submit.textContent==="Checking payment status…"){
+           setStatus(isAstro?astroStatus:status,"Your payment status could not be confirmed yet. Do not pay again if your bank/UPI app shows a debit or pending transaction. Use Check payment status to check again.");
+           submit.disabled=!hasBookingConsent(type);
+           submit.dataset.paymentCheckBookingId=order.bookingId;
+           submit.textContent="Check payment status →";
+           bookingSubmissionPending[type]=false;
          }
        }
      }
@@ -690,6 +726,10 @@ async function startPayment({formData,type}){
 
 document.getElementById("booking").addEventListener("submit",e=>{
  e.preventDefault();
+ const emotionalSubmit=document.getElementById("emotionalSubmit");
+ const checkBookingId=emotionalSubmit.dataset.paymentCheckBookingId;
+ if(emotionalSubmit.dataset.paymentCheckUnavailable){setStatus(status,"Payment status could not be checked in this browser session. Do not retry if any debit or pending transaction exists; contact support.");return;}
+ if(checkBookingId){void recoverPendingBooking(checkBookingId,"emotional");return;}
  const q=id=>document.getElementById(id).value;
  if(!q("time")){setStatus(status,"Please choose an available time.");return}
  startPayment({
@@ -710,6 +750,10 @@ document.getElementById("booking").addEventListener("submit",e=>{
 
 document.getElementById("astrologyBooking").addEventListener("submit",e=>{
  e.preventDefault();
+ const astrologySubmit=document.getElementById("astrologySubmit");
+ const checkBookingId=astrologySubmit.dataset.paymentCheckBookingId;
+ if(astrologySubmit.dataset.paymentCheckUnavailable){setStatus(astroStatus,"Payment status could not be checked in this browser session. Do not retry if any debit or pending transaction exists; contact support.");return;}
+ if(checkBookingId){void recoverPendingBooking(checkBookingId,"astrology");return;}
  const q=id=>document.getElementById(id).value;
  if(!q("astroTime")){setStatus(astroStatus,"Please choose an available time.");return}
  startPayment({
