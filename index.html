@@ -283,7 +283,10 @@ const retryableOrders={emotional:null,astrology:null};
 function hasBookingConsent(type){return Boolean((type==="astrology"?astrologyConsentInput:emotionalConsentInput)?.checked)}
 function updateConsentButton(type){const submit=document.getElementById(type==="astrology"?"astrologySubmit":"emotionalSubmit");if(submit)submit.disabled=!hasBookingConsent(type)||bookingSubmissionPending[type]}
 function restoreSubmitButton(type,submit,label){bookingSubmissionPending[type]=false;submit.disabled=!hasBookingConsent(type);submit.textContent=label}
-function clearRetryableOrder(type,bookingId){const current=retryableOrders[type];if(!current||!bookingId||current.bookingId===bookingId)retryableOrders[type]=null}
+function clearRetryableOrder(type,bookingId){const current=retryableOrders[type];if(!current||!bookingId||current.bookingId===bookingId){retryableOrders[type]=null;try{sessionStorage.removeItem("theUnsaidRetryOrder_"+type)}catch(_){}}}
+async function fingerprintFormData(formData){if(!window.crypto?.subtle)return "";const digest=await window.crypto.subtle.digest("SHA-256",new TextEncoder().encode(JSON.stringify(formData)));return Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("")}
+function readStoredRetryOrder(type){try{const raw=sessionStorage.getItem("theUnsaidRetryOrder_"+type);return raw?JSON.parse(raw):null}catch(_){return null}}
+function storeRetryOrder(type,order,formFingerprint){try{sessionStorage.setItem("theUnsaidRetryOrder_"+type,JSON.stringify({bookingId:order.bookingId,orderId:order.orderId,amount:order.amount,currency:order.currency,keyId:order.keyId,expiresAt:order.expiresAt,formFingerprint}))}catch(_){}}
 function retryOrderIsValid(type,formData){const order=retryableOrders[type];return Boolean(order&&order.formSnapshot===JSON.stringify(formData)&&Number.isFinite(Date.parse(order.expiresAt))&&Date.parse(order.expiresAt)>Date.now()+5000)}
 emotionalConsentInput?.addEventListener("change",()=>updateConsentButton("emotional"));
 astrologyConsentInput?.addEventListener("change",()=>updateConsentButton("astrology"));
@@ -512,9 +515,11 @@ async function startPayment({formData,type}){
  submit.disabled=true;submit.textContent="Creating secure booking…";
  try{
    const formSnapshot=JSON.stringify(formData);
-   let order=retryableOrders[type];
+   const formFingerprint=await fingerprintFormData(formData);
+   let order=retryableOrders[type]||readStoredRetryOrder(type);
    const activeSavedOrder=Boolean(order&&Number.isFinite(Date.parse(order.expiresAt))&&Date.parse(order.expiresAt)>Date.now()+5000);
-   if(activeSavedOrder&&order.formSnapshot!==formSnapshot){
+   const sameSavedForm=Boolean(order&&(order.formSnapshot?order.formSnapshot===formSnapshot:(formFingerprint&&order.formFingerprint===formFingerprint)));
+   if(activeSavedOrder&&!sameSavedForm){
      throw new Error("Your previous payment attempt is still holding this slot. Use the original booking details to retry, or wait for the 10-minute hold to expire before changing them.");
    }
    if(!activeSavedOrder){
@@ -526,8 +531,9 @@ async function startPayment({formData,type}){
      });
      const createdOrder=await orderResponse.json();
      if(!orderResponse.ok)throw new Error(createdOrder.error||"Could not start payment.");
-     order={...createdOrder,formSnapshot};
+     order={...createdOrder,formSnapshot,formFingerprint};
      retryableOrders[type]=order;
+     storeRetryOrder(type,order,formFingerprint);
      try{
        localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({
          bookingId:order.bookingId,
@@ -538,6 +544,8 @@ async function startPayment({formData,type}){
        sessionStorage.setItem("theUnsaidBookingAccessToken_"+order.bookingId,String(order.accessToken||""));
      }catch(_){}
    }else{
+     order={...order,formSnapshot,formFingerprint};
+     retryableOrders[type]=order;
      submit.textContent="Retrying secure checkout…";
    }
    if(typeof Razorpay==="undefined")throw new Error("Payment checkout could not load. Please try again.");
