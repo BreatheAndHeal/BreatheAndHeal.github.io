@@ -5,6 +5,29 @@ const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
 
+function isPreviewHost(req){
+  let host=String(req.headers["x-forwarded-host"]||req.headers.host||"").split(",")[0].trim().toLowerCase();
+  if(!host){
+    try{host=new URL(req.url).hostname.toLowerCase()}catch(_){host=""}
+  }
+  host=host.replace(/:\d+$/,"");
+  if(host.endsWith(".pages.dev")) return host!=="the-unsaid-bg2.pages.dev";
+  if(host.endsWith(".vercel.app")){
+    return !new Set([
+      "the-unsaid-alpha.vercel.app",
+      "the-unsaid-lologram24-9450.vercel.app",
+      "the-unsaid-git-main-lologram24-9450.vercel.app"
+    ]).has(host);
+  }
+  return false;
+}
+
+function normalizeDatabaseDate(value){
+  if(value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0,10);
+  const match=String(value||"").match(/^(\\d{4}-\\d{2}-\\d{2})/);
+  return match ? match[1] : "";
+}
+
 let consentSchemaPromise=null;
 async function ensureConsentSchema(){
   if(!consentSchemaPromise){
@@ -52,6 +75,13 @@ module.exports = async (req,res) => {
     const slotError=validateSlot(date,time,meta.duration);
     if(slotError) return json(res,400,{error:slotError});
 
+    const keyId=process.env.RAZORPAY_KEY_ID;
+    const keySecret=process.env.RAZORPAY_KEY_SECRET;
+    if(!keyId || !keySecret) return json(res,500,{error:"Payment system is not configured yet."});
+    if(keyId.startsWith("rzp_live_") && isPreviewHost(req)){
+      return json(res,503,{error:"Live payments are disabled on preview deployments. No checkout was started. Use the production site for real customers or configure Razorpay Test Mode for preview testing."});
+    }
+
     // Recheck the provider's Google Calendar immediately before creating the
     // payment order. This prevents an emergency/unavailable calendar event
     // added after the availability screen was loaded from becoming bookable.
@@ -78,6 +108,61 @@ module.exports = async (req,res) => {
     // Remove expired holds so slots become reusable.
     await sql`DELETE FROM slot_locks WHERE expires_at IS NOT NULL AND expires_at < NOW()`;
 
+    // A failed/cancelled checkout may be retried. If this exact customer,
+    // session and slot already has a live unpaid hold, reuse its existing
+    // booking and Razorpay order instead of attempting a second slot lock.
+    const requestedBlocks=toBlocks(time,meta.duration);
+    const blockers=new Map();
+    for(const block of requestedBlocks){
+      const lockedRows=await sql`
+        SELECT b.*, sl.expires_at AS slot_lock_expires_at
+        FROM slot_locks sl
+        INNER JOIN bookings b ON b.id=sl.booking_id
+        WHERE sl.slot_date=${date}
+          AND sl.slot_start=${block}
+          AND (sl.expires_at IS NULL OR sl.expires_at > NOW())
+        LIMIT 1
+      `;
+      if(lockedRows[0]) blockers.set(lockedRows[0].id,lockedRows[0]);
+    }
+
+    if(blockers.size){
+      const existing=blockers.size===1 ? [...blockers.values()][0] : null;
+      const sameRequestedSlot=Boolean(existing &&
+        normalizeDatabaseDate(existing.booking_date)===date &&
+        String(existing.booking_time).slice(0,5)===time &&
+        existing.session_name===sessionName &&
+        existing.service===meta.service &&
+        Number(existing.duration_minutes)===Number(meta.duration));
+      const activeUnpaidHold=Boolean(existing &&
+        existing.payment_status!=="paid" &&
+        existing.booking_status==="pending" &&
+        existing.razorpay_order_id &&
+        existing.customer_email===email &&
+        sameRequestedSlot &&
+        existing.slot_lock_expires_at &&
+        new Date(existing.slot_lock_expires_at).getTime()>Date.now());
+
+      if(activeUnpaidHold){
+        return json(res,200,{
+          bookingId:existing.id,
+          accessToken:createBookingAccessToken(existing.id),
+          orderId:existing.razorpay_order_id,
+          amount:Number(existing.amount_inr),
+          currency:"INR",
+          keyId,
+          expiresAt:existing.expires_at,
+          reused:true
+        });
+      }
+
+      if(existing && existing.payment_status==="paid"){
+        return json(res,409,{error:"Payment is already recorded or being confirmed for this slot. Please do not pay again; check the booking status or contact support."});
+      }
+
+      return json(res,409,{error:"This time overlaps an active booking hold. If this is your previous unpaid attempt, retry with the same email, session, date and time. Otherwise choose another available slot after the hold expires."});
+    }
+
     const bookingId=crypto.randomUUID();
     const expiresAt=new Date(Date.now()+10*60*1000).toISOString();
 
@@ -99,13 +184,6 @@ module.exports = async (req,res) => {
     } catch(err) {
       await sql`DELETE FROM bookings WHERE id=${bookingId}`;
       return json(res,409,{error:"That time was just booked. Please choose another available slot."});
-    }
-
-    const keyId=process.env.RAZORPAY_KEY_ID;
-    const keySecret=process.env.RAZORPAY_KEY_SECRET;
-    if(!keyId || !keySecret){
-      await sql`DELETE FROM bookings WHERE id=${bookingId}`;
-      return json(res,500,{error:"Payment system is not configured yet."});
     }
 
     const auth=Buffer.from(keyId+":"+keySecret).toString("base64");
