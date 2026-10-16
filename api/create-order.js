@@ -5,6 +5,12 @@ const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
 
+function normalizeDatabaseDate(value){
+  if(value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0,10);
+  const match=String(value||"").match(/^(\\d{4}-\\d{2}-\\d{2})/);
+  return match ? match[1] : "";
+}
+
 let consentSchemaPromise=null;
 async function ensureConsentSchema(){
   if(!consentSchemaPromise){
@@ -99,7 +105,7 @@ module.exports = async (req,res) => {
     if(blockers.size){
       const existing=blockers.size===1 ? [...blockers.values()][0] : null;
       const sameRequestedSlot=Boolean(existing &&
-        String(existing.booking_date).slice(0,10)===date &&
+        normalizeDatabaseDate(existing.booking_date)===date &&
         String(existing.booking_time).slice(0,5)===time &&
         existing.session_name===sessionName &&
         existing.service===meta.service &&
