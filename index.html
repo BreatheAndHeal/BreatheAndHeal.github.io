@@ -282,6 +282,32 @@ const bookingSubmissionPending={emotional:false,astrology:false};
 function hasBookingConsent(type){return Boolean((type==="astrology"?astrologyConsentInput:emotionalConsentInput)?.checked)}
 function updateConsentButton(type){const submit=document.getElementById(type==="astrology"?"astrologySubmit":"emotionalSubmit");if(submit)submit.disabled=!hasBookingConsent(type)||bookingSubmissionPending[type]}
 function restoreSubmitButton(type,submit,label){bookingSubmissionPending[type]=false;submit.disabled=!hasBookingConsent(type);submit.textContent=label}
+const retryableOrders={emotional:null,astrology:null};
+function clearRetryableOrder(type,bookingId){
+ const current=retryableOrders[type];
+ if(!current||!bookingId||current.bookingId===bookingId){
+   retryableOrders[type]=null;
+   try{sessionStorage.removeItem("theUnsaidRetryOrder_"+type)}catch(_){}
+ }
+}
+async function fingerprintFormData(formData){
+ if(!window.crypto?.subtle)return "";
+ const digest=await window.crypto.subtle.digest("SHA-256",new TextEncoder().encode(JSON.stringify(formData)));
+ return Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+function readStoredRetryOrder(type){
+ try{const raw=sessionStorage.getItem("theUnsaidRetryOrder_"+type);return raw?JSON.parse(raw):null}catch(_){return null}
+}
+function storeRetryOrder(type,order,formFingerprint){
+ try{sessionStorage.setItem("theUnsaidRetryOrder_"+type,JSON.stringify({
+   bookingId:order.bookingId,orderId:order.orderId,amount:order.amount,currency:order.currency,
+   keyId:order.keyId,expiresAt:order.expiresAt,formFingerprint
+ }))}catch(_){}
+}
+function retryOrderIsValid(type,formData){
+ const order=retryableOrders[type];
+ return Boolean(order&&order.formSnapshot===JSON.stringify(formData)&&Number.isFinite(Date.parse(order.expiresAt))&&Date.parse(order.expiresAt)>Date.now()+5000);
+}
 emotionalConsentInput?.addEventListener("change",()=>updateConsentButton("emotional"));
 astrologyConsentInput?.addEventListener("change",()=>updateConsentButton("astrology"));
 updateConsentButton("emotional");
@@ -425,6 +451,7 @@ async function recoverPendingBooking(bookingId,type,paymentId){
      }finally{clearTimeout(timeoutId)}
      if(r.ok && data.ok){
        if(data.slotConflict){
+         clearRetryableOrder(type,data.bookingId);
          showSuccess(target,
            "<h4>Payment received · slot needs rescheduling</h4>"+
            "<p><strong>"+escapeHtml(data.session)+"</strong></p>"+
@@ -438,9 +465,31 @@ async function recoverPendingBooking(bookingId,type,paymentId){
        }
        const paymentPaid=data.paymentStatus==="paid";
        const confirmed=data.bookingStatus==="confirmed" && Boolean(data.meetLink);
+       if(!paymentPaid && !confirmed &&
+          (data.paymentAttemptStatus==="failed" || data.paymentAttemptStatus==="not_started")){
+         const failed=data.paymentAttemptStatus==="failed";
+         showSuccess(target,
+           "<h4>"+(failed?"Payment attempt failed":"Payment was not started")+"</h4>"+
+           "<p><strong>"+escapeHtml(data.session)+"</strong></p>"+
+           "<p>"+escapeHtml(data.date)+" · "+escapeHtml(prettyTime(data.time))+"</p>"+
+           "<p>Booking ID: "+escapeHtml(data.bookingId)+"</p>"+
+           "<p>"+(failed
+             ?"Razorpay reports that no successful payment was made for this attempt. Your booking is not confirmed."
+             :"Razorpay has no payment attempt recorded for this booking. Your booking is not confirmed.")+"</p>"+
+           "<p>To retry, use the same email, session, date and time in the booking form. The system will reuse the existing unpaid order while its slot hold is active. Do not pay again if your bank or Razorpay shows a successful debit.</p>"
+         );
+         setStatus(statusEl,failed
+           ?"Payment failed. The booking is not confirmed; re-enter the same booking details to retry safely."
+           :"No payment was recorded. The booking is not confirmed; re-enter the same booking details to continue.");
+         const saved=readStoredRetryOrder(type);
+         if(saved?.bookingId===bookingId) retryableOrders[type]=saved;
+         restoreSubmitButton(type,submit,saved?.bookingId===bookingId?"Retry payment →":"Continue to payment →");
+         return false;
+       }
        if(paymentPaid || confirmed){
          paymentKnown=true;
          if(confirmed){
+           clearRetryableOrder(type,data.bookingId);
            const meetUrl=safeMeetUrl(data.meetLink);
            const meet=meetUrl?'<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
            showSuccess(target,
@@ -496,22 +545,43 @@ async function startPayment({formData,type}){
  bookingSubmissionPending[type]=true;
  submit.disabled=true;submit.textContent="Creating secure booking…";
  try{
-   const orderResponse=await fetch(API_BASE+"/api/create-order",{
-     method:"POST",
-     headers:{"Content-Type":"application/json","Accept":"application/json"},
-     body:JSON.stringify(formData)
-   });
-   const order=await orderResponse.json();
-   if(!orderResponse.ok)throw new Error(order.error||"Could not start payment.");
-   try{
-     localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({
-       bookingId:order.bookingId,
-       type,
-       session:sessionName,
-       createdAt:Date.now()
-     }));
-     sessionStorage.setItem("theUnsaidBookingAccessToken_"+order.bookingId,String(order.accessToken||""));
-   }catch(_){}
+   const formSnapshot=JSON.stringify(formData);
+   const formFingerprint=await fingerprintFormData(formData);
+   let order=retryableOrders[type]||readStoredRetryOrder(type);
+   const activeSavedOrder=Boolean(order&&Number.isFinite(Date.parse(order.expiresAt))&&Date.parse(order.expiresAt)>Date.now()+5000);
+   const sameSavedForm=Boolean(order&&(order.formSnapshot?order.formSnapshot===formSnapshot:(formFingerprint&&order.formFingerprint===formFingerprint)));
+   // Preserve the retry state only for the same booking form. The server will
+   // independently detect and reuse an active unpaid order for the same slot.
+   if(activeSavedOrder&&!sameSavedForm){
+     order=null;
+     retryableOrders[type]=null;
+   }
+   if(!activeSavedOrder || !sameSavedForm){
+     retryableOrders[type]=null;
+     const orderResponse=await fetch(API_BASE+"/api/create-order",{
+       method:"POST",
+       headers:{"Content-Type":"application/json","Accept":"application/json"},
+       body:JSON.stringify(formData)
+     });
+     const createdOrder=await orderResponse.json();
+     if(!orderResponse.ok)throw new Error(createdOrder.error||"Could not start payment.");
+     order={...createdOrder,formSnapshot,formFingerprint};
+     retryableOrders[type]=order;
+     storeRetryOrder(type,order,formFingerprint);
+     try{
+       localStorage.setItem("theUnsaidPendingBooking",JSON.stringify({
+         bookingId:order.bookingId,
+         type,
+         session:sessionName,
+         createdAt:Date.now()
+       }));
+       sessionStorage.setItem("theUnsaidBookingAccessToken_"+order.bookingId,String(order.accessToken||""));
+     }catch(_){}
+   }else{
+     order={...order,formSnapshot,formFingerprint};
+     retryableOrders[type]=order;
+     submit.textContent="Retrying secure checkout…";
+   }
    if(typeof Razorpay==="undefined")throw new Error("Payment checkout could not load. Please try again.");
    const options={
      key:order.keyId,
@@ -531,7 +601,7 @@ async function startPayment({formData,type}){
        restoreSubmitButton(type,submit,"Checking payment status…");
        await recoverPendingBooking(order.bookingId,type);
        if(!submit.textContent.includes("Payment received") && !submit.textContent.includes("Payment complete"))
-         submit.textContent="Continue to payment →";
+         submit.textContent=retryOrderIsValid(type,formData)?"Retry payment →":"Continue to payment →";
      }},
      handler:async function(response){
        submit.textContent="Verifying payment…";
@@ -556,10 +626,12 @@ async function startPayment({formData,type}){
          let verified;
          try{verified=await vr.json()}catch(_){throw new Error("Payment response could not be read. Checking status automatically.")}
          if(!vr.ok||!verified.ok)throw new Error(verified.error||"Payment verification is still pending.");
+         clearRetryableOrder(type,order.bookingId);
          const target=isAstro?astrologySuccess:emotionalSuccess;
          const meetUrl=safeMeetUrl(verified.meetLink);
          const meet=meetUrl?'<a class="btn secondary" target="_blank" rel="noopener" href="'+meetUrl+'">Open Google Meet →</a>':"";
          if(verified.slotConflict){
+           clearRetryableOrder(type,order.bookingId);
            showSuccess(target,
              "<h4>Payment received · slot needs rescheduling</h4>"+
              "<p><strong>"+escapeHtml(verified.session)+"</strong></p>"+
