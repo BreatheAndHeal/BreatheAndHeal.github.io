@@ -10,7 +10,10 @@ const dist = path.join(root, "dist");
 test("Cloudflare build publishes public pages but not backend source", () => {
   execFileSync(process.execPath, ["scripts/build-static.js"], {
     cwd: root,
-    stdio: "pipe"
+    stdio: "pipe",
+    // This test checks the staging/noindex build regardless of the
+    // environment flag configured for the actual Production build.
+    env: { ...process.env, SITE_INDEXING_ENABLED: "false" }
   });
 
   assert.ok(fs.existsSync(path.join(dist, "index.html")), "index.html should be published");
