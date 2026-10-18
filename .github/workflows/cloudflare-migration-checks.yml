@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - migration/cloudflare-staging
-      - fix/cloudflare-production-parity-20261018
+      - 'fix/**'
   pull_request:
     branches:
       - main
