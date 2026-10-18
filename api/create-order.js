@@ -5,6 +5,7 @@ const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
 const { normalizeDatabaseDate } = require("../lib/date-utils");
+const { scrubExpiredUnpaidBookings } = require("../lib/retention");
 
 function isPreviewHost(req){
   let host=String(req.headers["x-forwarded-host"]||req.headers.host||"").split(",")[0].trim().toLowerCase();
@@ -37,8 +38,6 @@ async function ensureConsentSchema(){
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
   if(req.method !== "POST") return json(res,405,{error:"Method not allowed."});
-  if(!allowRequest(req,"create-order",12,10*60*1000))
-    return json(res,429,{error:"Too many booking attempts. Please wait a little and try again."});
   try {
     const body=req.body || {};
     if(body.consentAccepted!==true)
@@ -69,6 +68,10 @@ module.exports = async (req,res) => {
 
     const slotError=validateSlot(date,time,meta.duration);
     if(slotError) return json(res,400,{error:slotError});
+
+    if(!await allowRequest(req,"create-order",12,10*60*1000))
+      return json(res,429,{error:"Too many booking attempts. Please wait a little and try again."});
+    await scrubExpiredUnpaidBookings();
 
     const keyId=process.env.RAZORPAY_KEY_ID;
     const keySecret=process.env.RAZORPAY_KEY_SECRET;
