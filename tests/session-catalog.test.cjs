@@ -51,6 +51,10 @@ test("visible cards, booking dropdowns, and duration FAQ use the same current op
   assert.equal(html.split("Vedic Insight — 20 min · ₹899").length - 1, 4);
   assert.equal(html.split("Deep Vedic Reading — 40 min · ₹1,399").length - 1, 4);
   assert.equal(html.split("Complete Vedic Guidance — 60 min · ₹1,999").length - 1, 4);
+
+  assert.ok(html.includes('"Vedic Insight — 20 min · ₹899":{amount:899,service:"astrology"}'));
+  assert.ok(html.includes('"Deep Vedic Reading — 40 min · ₹1,399":{amount:1399,service:"astrology"}'));
+  assert.ok(html.includes('"Complete Vedic Guidance — 60 min · ₹1,999":{amount:1999,service:"astrology"}'));
 });
 
 test("new bookings reject retired session choices while existing bookings retain recovery metadata", () => {
