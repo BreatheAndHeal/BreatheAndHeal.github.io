@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - migration/cloudflare-staging
+      - fix/cloudflare-production-parity-20261018
   pull_request:
     branches:
       - main
@@ -94,3 +95,19 @@ jobs:
             kill "$(cat /tmp/the-unsaid-wrangler.pid)" 2>/dev/null || true
           fi
           rm -f .dev.vars
+
+      - name: Validate indexing-enabled Pages build
+        env:
+          PUBLIC_SITE_URL: https://the-unsaid-bg2.pages.dev
+          SITE_INDEXING_ENABLED: "true"
+        run: |
+          npm run build
+          if grep -qi 'X-Robots-Tag: noindex' dist/_headers; then
+            echo "Indexing-enabled build retained a noindex header."
+            exit 1
+          fi
+          if grep -R 'https://breatheandheal.github.io' dist --include='*.html' --include='*.xml' --include='*.txt'; then
+            echo "Legacy GitHub Pages origin remains in public assets."
+            exit 1
+          fi
+          grep -q 'Sitemap: https://the-unsaid-bg2.pages.dev/sitemap.xml' dist/robots.txt
