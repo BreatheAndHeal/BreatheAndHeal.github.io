@@ -60,7 +60,8 @@ function getBusySlots(body) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("Invalid date.");
   const workStart = Number(body.workStart);
   const workEnd = Number(body.workEnd);
-  const slotMinutes = Number(body.slotIntervalMinutes || SLOT_MINUTES);
+  // Older preview callers may omit the interval; new code sends it explicitly.
+  const slotMinutes = Number(body.slotIntervalMinutes || 30);
   if (!Number.isInteger(slotMinutes) || slotMinutes < 1 || 60 % slotMinutes !== 0) {
     throw new Error("Invalid slot interval.");
   }
