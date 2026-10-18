@@ -4,9 +4,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 // Exercise repository defaults even when a developer has local overrides.
-for (const name of ["WORK_START_HOUR","WORK_END_HOUR","SLOT_INTERVAL_MINUTES","WORK_DAYS","MIN_LEAD_MINUTES"]) {
-  process.env[name] = "";
-}
+// Simulate stale Production values: the requested schedule must not regress to old settings.
+process.env.WORK_START_HOUR = "10";
+process.env.WORK_END_HOUR = "22";
+process.env.SLOT_INTERVAL_MINUTES = "30";
+process.env.WORK_DAYS = "1,2,3,4,5,6";
+process.env.MIN_LEAD_MINUTES = "60";
 const {
   WORK_START, WORK_END, SLOT_MINUTES, WORK_DAYS, validateSlot, toBlocks, timeRangesOverlap
 } = require("../lib/config");
@@ -23,7 +26,7 @@ function nextSunday() {
   ].join("-");
 }
 
-test("default booking schedule is seven days, 07:00–23:00 IST, every 20 minutes", () => {
+test("booking schedule stays seven days, 07:00–23:00 IST, every 20 minutes even with stale env overrides", () => {
   assert.equal(WORK_START, 7);
   assert.equal(WORK_END, 23);
   assert.equal(SLOT_MINUTES, 20);
@@ -57,10 +60,12 @@ test("real-time overlap check protects old bookings from the previous 30-minute 
   assert.equal(timeRangesOverlap("10:00", 40, "10:40", 20), false);
 });
 
-test("booking UI clearly shows the daily schedule in both forms", () => {
+test("booking UI uses centered stacked layout and daily schedule copy in both forms", () => {
   const html = fs.readFileSync(path.resolve(__dirname, "../index.html"), "utf8");
   const guidance = "Available daily, including Sundays, 7:00 AM–11:00 PM IST. Start times are every 20 minutes; sessions finish by 11:00 PM.";
   assert.equal(html.split(guidance).length - 1, 2);
+  assert.match(html, /\.book\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
+  assert.match(html, /\.book-panel\{width:min\(100%,900px\);margin:0 auto/);
 });
 
 test("both Apps Script adapters use the same 20-minute busy grid", () => {
