@@ -10,7 +10,8 @@ const dist = path.join(root, "dist");
 test("Cloudflare build publishes public pages but not backend source", () => {
   execFileSync(process.execPath, ["scripts/build-static.js"], {
     cwd: root,
-    stdio: "pipe"
+    stdio: "pipe",
+    env: { ...process.env, SITE_INDEXING_ENABLED: "false" }
   });
 
   assert.ok(fs.existsSync(path.join(dist, "index.html")), "index.html should be published");
