@@ -5,6 +5,7 @@ on:
     branches:
       - migration/cloudflare-staging
       - migration/cloudflare-preview
+      - 'fix/**'
   pull_request:
     branches:
       - main
