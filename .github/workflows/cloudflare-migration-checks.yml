@@ -50,11 +50,11 @@ jobs:
           GOOGLE_APPS_SCRIPT_SECRET=smoke-apps-script-only
           ALLOWED_ORIGIN=http://127.0.0.1:8788
           BOOKING_TIMEZONE=Asia/Kolkata
-          WORK_START_HOUR=10
-          WORK_END_HOUR=22
-          SLOT_INTERVAL_MINUTES=30
+          WORK_START_HOUR=7
+          WORK_END_HOUR=23
+          SLOT_INTERVAL_MINUTES=20
           MIN_LEAD_MINUTES=60
-          WORK_DAYS=1,2,3,4,5,6
+          WORK_DAYS=0,1,2,3,4,5,6
           VARS
           npx --yes wrangler@4 pages dev dist --ip 127.0.0.1 --port 8788 > /tmp/the-unsaid-wrangler.log 2>&1 &
           echo $! > /tmp/the-unsaid-wrangler.pid

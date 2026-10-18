@@ -1,7 +1,7 @@
 const TIME_ZONE = "Asia/Kolkata";
 const CALENDAR_PROPERTY = "TEST_CALENDAR_ID";
 const SECRET_PROPERTY = "GOOGLE_APPS_SCRIPT_SECRET";
-const SLOT_MINUTES = 30;
+const SLOT_MINUTES = 20;
 
 function doGet() {
   return jsonOutput({ ok: true, environment: "staging", service: "The Unsaid test calendar" });
@@ -60,6 +60,10 @@ function getBusySlots(body) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("Invalid date.");
   const workStart = Number(body.workStart);
   const workEnd = Number(body.workEnd);
+  const slotMinutes = Number(body.slotIntervalMinutes || SLOT_MINUTES);
+  if (!Number.isInteger(slotMinutes) || slotMinutes < 1 || 60 % slotMinutes !== 0) {
+    throw new Error("Invalid slot interval.");
+  }
   if (!Number.isInteger(workStart) || !Number.isInteger(workEnd) ||
       workStart < 0 || workEnd > 24 || workEnd <= workStart) {
     throw new Error("Invalid working hours.");
@@ -78,9 +82,9 @@ function getBusySlots(body) {
   for (const event of events) {
     const eventStart = event.getStartTime().getTime();
     const eventEnd = event.getEndTime().getTime();
-    for (let minutes = workStart * 60; minutes < workEnd * 60; minutes += SLOT_MINUTES) {
+    for (let minutes = workStart * 60; minutes < workEnd * 60; minutes += slotMinutes) {
       const slotStart = dayEpoch + minutes * 60 * 1000;
-      const slotEnd = slotStart + SLOT_MINUTES * 60 * 1000;
+      const slotEnd = slotStart + slotMinutes * 60 * 1000;
       if (eventStart < slotEnd && eventEnd > slotStart) {
         blocked.add(pad2(Math.floor(minutes / 60)) + ":" + pad2(minutes % 60));
       }
@@ -298,10 +302,10 @@ function testStagingEmailTemplates() {
   const time = Utilities.formatDate(now, TIME_ZONE, "HH:mm");
   const result = sendStagingEmails({
     bookingId: "STAGING-EMAIL-TEST-" + Utilities.getUuid().slice(0, 8),
-    sessionName: "Focused Conversation — 30 min (email template test)",
+    sessionName: "Focused Conversation — 20 min (email template test)",
     date: date,
     time: time,
-    duration: 30,
+    duration: 20,
     customerName: "Test Customer",
     customerEmail: "test-customer@example.com",
     amount: 499,

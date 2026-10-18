@@ -19,7 +19,7 @@ const TIME_ZONE = "Asia/Kolkata";
 const CALENDAR_PROPERTY = "PRODUCTION_CALENDAR_ID";
 const SECRET_PROPERTY = "GOOGLE_APPS_SCRIPT_SECRET";
 const ADMIN_EMAIL_PROPERTY = "ADMIN_NOTIFICATION_EMAIL";
-const SLOT_MINUTES = 30;
+const SLOT_MINUTES = 20;
 const BOOKING_RECORD_PREFIX = "UNSAID_PROD_BOOKING_";
 
 function doGet() {
@@ -88,10 +88,10 @@ function testProductionEmailTemplates() {
 
   const sample = {
     bookingId: "PRODUCTION-SETUP-TEST-" + Utilities.getUuid().slice(0, 8),
-    sessionName: "Focused Conversation — 30 min",
+    sessionName: "Focused Conversation — 20 min",
     date: Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd"),
     time: "11:00",
-    duration: 30,
+    duration: 20,
     customerName: "Sample Customer (test only)",
     customerEmail: "sample-customer@example.com",
     customerWhatsapp: "Not applicable — setup test",
@@ -136,6 +136,10 @@ function getBusySlots(body) {
 
   const workStart = Number(body.workStart);
   const workEnd = Number(body.workEnd);
+  const slotMinutes = Number(body.slotIntervalMinutes || SLOT_MINUTES);
+  if (!Number.isInteger(slotMinutes) || slotMinutes < 1 || 60 % slotMinutes !== 0) {
+    throw new Error("Invalid slot interval.");
+  }
   if (!Number.isInteger(workStart) || !Number.isInteger(workEnd) ||
       workStart < 0 || workEnd > 24 || workEnd <= workStart) {
     throw new Error("Invalid working hours.");
@@ -154,9 +158,9 @@ function getBusySlots(body) {
   for (const event of events) {
     const eventStart = event.getStartTime().getTime();
     const eventEnd = event.getEndTime().getTime();
-    for (let minutes = workStart * 60; minutes < workEnd * 60; minutes += SLOT_MINUTES) {
+    for (let minutes = workStart * 60; minutes < workEnd * 60; minutes += slotMinutes) {
       const slotStart = dayEpoch + minutes * 60 * 1000;
-      const slotEnd = slotStart + SLOT_MINUTES * 60 * 1000;
+      const slotEnd = slotStart + slotMinutes * 60 * 1000;
       if (eventStart < slotEnd && eventEnd > slotStart) {
         blocked.add(pad2(Math.floor(minutes / 60)) + ":" + pad2(minutes % 60));
       }

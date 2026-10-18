@@ -29,11 +29,11 @@ Required for the current code:
 - GOOGLE_APPS_SCRIPT_SECRET — secret matching the Apps Script deployment
 - ALLOWED_ORIGIN — exact production website origin, e.g. https://the-unsaid.pages.dev
 - BOOKING_TIMEZONE — Asia/Kolkata
-- WORK_START_HOUR — 10
-- WORK_END_HOUR — 22
-- SLOT_INTERVAL_MINUTES — 30
+- WORK_START_HOUR — 7
+- WORK_END_HOUR — 23
+- SLOT_INTERVAL_MINUTES — 20
 - MIN_LEAD_MINUTES — 60
-- WORK_DAYS — 1,2,3,4,5,6
+- WORK_DAYS — 0,1,2,3,4,5,6
 
 Optional:
 - GOOGLE_APPS_SCRIPT_URL — if configured, use the exact Apps Script deployment URL stored privately in the existing environment; otherwise the source has a fallback URL.
