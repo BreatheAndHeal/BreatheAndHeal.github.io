@@ -77,3 +77,26 @@ test("both Apps Script adapters use the same 20-minute busy grid", () => {
     assert.match(source, /slotEnd = slotStart \+ slotMinutes \* 60 \* 1000;/);
   }
 });
+
+
+test("astrology dropdown shows name and duration without price while preserving payment mapping values", () => {
+  const html = fs.readFileSync(path.resolve(__dirname, "../index.html"), "utf8");
+  assert.ok(html.includes('<option value="Vedic Insight — 20 min · ₹899">Vedic Insight — 20 min</option>'));
+  assert.ok(html.includes('<option value="Deep Vedic Reading — 40 min · ₹1,399">Deep Vedic Reading — 40 min</option>'));
+  assert.ok(html.includes('<option value="Complete Vedic Guidance — 60 min · ₹1,999">Complete Vedic Guidance — 60 min</option>'));
+  assert.equal(html.includes('<option>Vedic Insight — 20 min · ₹899</option>'), false);
+  assert.equal(html.includes('<option>Deep Vedic Reading — 40 min · ₹1,399</option>'), false);
+  assert.equal(html.includes('<option>Complete Vedic Guidance — 60 min · ₹1,999</option>'), false);
+  assert.ok(html.includes('"Vedic Insight — 20 min · ₹899":{amount:899,service:"astrology"}'));
+  assert.ok(html.includes('"Deep Vedic Reading — 40 min · ₹1,399":{amount:1399,service:"astrology"}'));
+  assert.ok(html.includes('"Complete Vedic Guidance — 60 min · ₹1,999":{amount:1999,service:"astrology"}'));
+});
+
+test("FAQ answers toggle explicitly and have a visible open state", () => {
+  const html = fs.readFileSync(path.resolve(__dirname, "../index.html"), "utf8");
+  assert.ok(html.includes('document.querySelectorAll(".faq details > summary")'));
+  assert.ok(html.includes('event.preventDefault();'));
+  assert.ok(html.includes('if(item) item.open=!item.open;'));
+  assert.ok(html.includes('.faq details[open]>p{display:block}'));
+  assert.ok(html.includes('.faq details:not([open])>p{display:none}'));
+});
