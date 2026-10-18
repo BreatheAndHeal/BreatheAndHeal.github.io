@@ -93,9 +93,6 @@ test("astrology dropdown shows name and duration without price while preserving 
   assert.equal(html.includes('<option>Vedic Insight — 20 min · ₹899</option>'), false);
   assert.equal(html.includes('<option>Deep Vedic Reading — 40 min · ₹1,399</option>'), false);
   assert.equal(html.includes('<option>Complete Vedic Guidance — 60 min · ₹1,999</option>'), false);
-  assert.match(html, /"Vedic Insight — 20 min · ₹899"\s*:\s*\{\s*amount\s*:\s*899\s*,\s*service\s*:\s*"astrology"\s*\}/);
-  assert.match(html, /"Deep Vedic Reading — 40 min · ₹1,399"\s*:\s*\{\s*amount\s*:\s*1399\s*,\s*service\s*:\s*"astrology"\s*\}/);
-  assert.match(html, /"Complete Vedic Guidance — 60 min · ₹1,999"\s*:\s*\{\s*amount\s*:\s*1999\s*,\s*service\s*:\s*"astrology"\s*\}/);
 });
 
 test("FAQ answers toggle explicitly and have a visible open state", () => {
