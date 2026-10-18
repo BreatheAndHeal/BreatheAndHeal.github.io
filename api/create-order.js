@@ -4,6 +4,7 @@ const { SESSIONS, json, handleOptions, isValidEmail, isValidHHMM, isValidISODate
 const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
+const { normalizeDatabaseDate } = require("../lib/date-utils");
 
 function isPreviewHost(req){
   let host=String(req.headers["x-forwarded-host"]||req.headers.host||"").split(",")[0].trim().toLowerCase();
@@ -20,12 +21,6 @@ function isPreviewHost(req){
     ]).has(host);
   }
   return false;
-}
-
-function normalizeDatabaseDate(value){
-  if(value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0,10);
-  const match=String(value||"").match(/^(\\d{4}-\\d{2}-\\d{2})/);
-  return match ? match[1] : "";
 }
 
 let consentSchemaPromise=null;
