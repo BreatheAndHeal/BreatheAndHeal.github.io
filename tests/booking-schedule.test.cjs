@@ -3,9 +3,12 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-for (const name of ["WORK_START_HOUR","WORK_END_HOUR","SLOT_INTERVAL_MINUTES","WORK_DAYS","MIN_LEAD_MINUTES"]) {
-  process.env[name] = "";
-}
+// Simulate stale Production values: the requested schedule must not regress to old settings.
+process.env.WORK_START_HOUR = "10";
+process.env.WORK_END_HOUR = "22";
+process.env.SLOT_INTERVAL_MINUTES = "30";
+process.env.WORK_DAYS = "1,2,3,4,5,6";
+process.env.MIN_LEAD_MINUTES = "60";
 const {
   SESSIONS, BOOKING_SESSION_METADATA, canonicalSession, WORK_START, WORK_END,
   SLOT_MINUTES, WORK_DAYS, validateSlot, toBlocks, timeRangesOverlap
@@ -20,7 +23,7 @@ function nextSunday() {
   return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
 }
 
-test("Vercel defaults allow 07:00–23:00 every day with 20-minute start intervals", () => {
+test("Vercel schedule stays 07:00–23:00 every day with 20-minute starts despite stale env overrides", () => {
   assert.equal(WORK_START, 7);
   assert.equal(WORK_END, 23);
   assert.equal(SLOT_MINUTES, 20);
@@ -77,4 +80,6 @@ test("Vercel homepage uses the requested four cards, menu and timing copy", () =
     "Focused Conversation — 30 min", "Deep Conversation — 45 min", "Vedic Insight — 30 min",
     "Deep Vedic Reading — 50 min", "Complete Vedic Guidance — 70 min", "₹999", "₹1,499", "₹2,199"
   ]) assert.equal(html.includes(oldValue), false, "Old session option still present: " + oldValue);
+  assert.match(html, /\.book\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
+  assert.match(html, /\.book-panel\{width:min\(100%,900px\);margin:0 auto/);
 });
