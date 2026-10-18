@@ -14,11 +14,11 @@ This repository contains the public GitHub Pages site plus Vercel serverless end
 - GOOGLE_REFRESH_TOKEN
 - GOOGLE_CALENDAR_ID (use `primary` for the connected Google account)
 - BOOKING_TIMEZONE=Asia/Kolkata
-- WORK_START_HOUR=10
-- WORK_END_HOUR=22
-- SLOT_INTERVAL_MINUTES=30
+- WORK_START_HOUR=7
+- WORK_END_HOUR=23
+- SLOT_INTERVAL_MINUTES=20
 - MIN_LEAD_MINUTES=60
-- WORK_DAYS=1,2,3,4,5,6
+- WORK_DAYS=0,1,2,3,4,5,6
 
 Never put Razorpay secrets, Google refresh tokens, or the Apps Script secret in public HTML or GitHub source. The public site URL is not a credential. Keep all server-side secrets in Vercel environment variables.
 
@@ -40,4 +40,4 @@ Create an OAuth client with Calendar access and store the resulting refresh toke
 
 ## Default availability
 
-Monday-Saturday, 10:00 AM-10:00 PM, with 30-minute start intervals and a 60-minute minimum lead time. These values are environment variables and can be changed without editing the code.
+Sunday-Saturday, 7:00 AM-11:00 PM IST, with 20-minute start intervals and a 60-minute minimum lead time. These values are environment variables and can be changed without editing the code.
