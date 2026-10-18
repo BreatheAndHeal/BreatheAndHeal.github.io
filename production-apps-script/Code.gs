@@ -136,7 +136,9 @@ function getBusySlots(body) {
 
   const workStart = Number(body.workStart);
   const workEnd = Number(body.workEnd);
-  const slotMinutes = Number(body.slotIntervalMinutes || SLOT_MINUTES);
+  // Older Vercel callers omit the interval. Keep them on their old 30-minute grid
+  // until that backend is updated; new callers explicitly send 20 after cutover.
+  const slotMinutes = Number(body.slotIntervalMinutes || 30);
   if (!Number.isInteger(slotMinutes) || slotMinutes < 1 || 60 % slotMinutes !== 0) {
     throw new Error("Invalid slot interval.");
   }
