@@ -78,6 +78,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 /* Keep booking intro and form in one centered, predictable flow on every screen size. */
 @media(max-width:950px){.book>div:first-child{order:1}.book>.book-panel{order:2}.book-panel{padding:22px}}
 
+
+/* Respect the visitor's operating-system reduced-motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 </style>
 </head>
 <body>

@@ -143,7 +143,7 @@ module.exports = async (req,res) => {
     if(!hasValidAccess && !recoveryPaymentId){
       return json(res,401,{error:"Booking access is not authorized."});
     }
-    if(!hasValidAccess && !allowRequest(req,"booking-payment-recovery",5,10*60*1000)){
+    if(!hasValidAccess && !(await allowRequest(req,"booking-payment-recovery",5,10*60*1000))){
       return json(res,429,{error:"Too many recovery attempts. Please wait and try again."});
     }
 

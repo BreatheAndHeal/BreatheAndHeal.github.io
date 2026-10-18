@@ -46,3 +46,13 @@ CREATE TABLE IF NOT EXISTS slot_locks (
 CREATE INDEX IF NOT EXISTS bookings_date_idx ON bookings(booking_date);
 CREATE INDEX IF NOT EXISTS bookings_status_idx ON bookings(booking_status);
 CREATE INDEX IF NOT EXISTS slot_locks_expiry_idx ON slot_locks(expires_at);
+ 
+-- Shared request rate limits across serverless instances/deployments.
+CREATE TABLE IF NOT EXISTS api_rate_limits (
+  rate_key TEXT PRIMARY KEY,
+  window_started_at TIMESTAMPTZ NOT NULL,
+  request_count INTEGER NOT NULL CHECK (request_count > 0),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS api_rate_limits_updated_at_idx ON api_rate_limits(updated_at);

@@ -24,14 +24,14 @@ async function fetchRazorpayPayment(paymentId){
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
   if(req.method !== "POST") return json(res,405,{error:"Method not allowed."});
-  if(!allowRequest(req,"verify-payment",20,10*60*1000))
-    return json(res,429,{error:"Too many verification attempts. Please wait and try again."});
   try {
     const {
       bookingId,razorpay_order_id,razorpay_payment_id,razorpay_signature
     }=req.body || {};
     if(!bookingId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature)
       return json(res,400,{error:"Missing payment verification fields."});
+    if(!await allowRequest(req,"verify-payment",20,10*60*1000))
+      return json(res,429,{error:"Too many verification attempts. Please wait and try again."});
 
     const rows=await sql`SELECT * FROM bookings WHERE id=${bookingId} LIMIT 1`;
     const booking=rows[0];

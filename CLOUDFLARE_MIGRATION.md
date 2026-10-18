@@ -1,6 +1,6 @@
 # The Unsaid: Cloudflare migration notes
 
-This branch is a staging candidate. It must not be promoted to production until the deployed preview passes the test checklist below.
+This document is the Cloudflare migration and operations runbook. The owner currently uses `migration/cloudflare-preview` for the Cloudflare Pages deployment at `https://the-unsaid-bg2.pages.dev`. A successful CI smoke test validates build and route guards; it is not proof of a complete Razorpay → Neon → Google Calendar/Meet/email transaction. Keep the end-to-end checklist below as a gate for final promotion and future major production changes.
 
 ## Architecture
 
@@ -23,17 +23,16 @@ Keep the non-secret build variable `SITE_INDEXING_ENABLED=false` throughout stag
 
 Required for the current code:
 - DATABASE_URL — existing Neon PostgreSQL connection string
+- Shared database table `api_rate_limits` — created from the additive schema in `schema.sql` before deploying the shared rate limiter.
 - RAZORPAY_KEY_ID — test key for preview; live key only after testing is approved
 - RAZORPAY_KEY_SECRET — secret
 - RAZORPAY_WEBHOOK_SECRET — secret matching the configured Razorpay webhook
 - GOOGLE_APPS_SCRIPT_SECRET — secret matching the Apps Script deployment
 - ALLOWED_ORIGIN — exact production website origin, e.g. https://the-unsaid.pages.dev
 - BOOKING_TIMEZONE — Asia/Kolkata
-- WORK_START_HOUR — 7
-- WORK_END_HOUR — 23
-- SLOT_INTERVAL_MINUTES — 20
 - MIN_LEAD_MINUTES — 60
-- WORK_DAYS — 0,1,2,3,4,5,6
+
+The current schedule is intentionally enforced in `lib/config.js`: 07:00–23:00 IST, every day including Sunday, with 20-minute start intervals. Stale schedule environment variables are ignored by design; schedule changes require a code change and tests.
 
 Optional:
 - GOOGLE_APPS_SCRIPT_URL — if configured, use the exact Apps Script deployment URL stored privately in the existing environment; otherwise the source has a fallback URL.
@@ -60,7 +59,9 @@ Only after tests pass should the production environment be switched to the exist
 4. Test Razorpay Test Mode order creation, invalid signature rejection, amount mismatch rejection, and captured-payment webhook signature validation.
 5. Test duplicate webhook/browser verification events; there must be no duplicate booking or Calendar/Meet event.
 6. Test failed/abandoned payment, expired hold cleanup, conflicting bookings, and paid-but-pending Calendar recovery.
-7. Confirm meeting-link and email delivery, mobile and desktop booking, legal/contact links, and basic accessibility.
-8. Export/backup the database and code before switching production. Keep the old site/backend online until all critical tests pass.
+7. Confirm meeting-link and email delivery, mobile and desktop booking, legal/contact links, reduced-motion behavior and basic accessibility.
+8. Confirm shared rate limiting works across requests/instances and review Cloudflare/Vercel runtime errors after deployment.
+9. Confirm expired unpaid booking details are anonymized after the 90-day retention window; do not manually delete current booking/payment rows without checking reconciliation state.
+10. Export/backup the database and code before switching production. Keep the old site/backend online until all critical tests pass.
 
 Do not delete GitHub Pages, the existing Vercel project, the Neon database, or existing secrets until the new deployment and rollback path are verified. This branch is intentionally separate from main.

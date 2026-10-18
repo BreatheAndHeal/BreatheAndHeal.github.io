@@ -1,13 +1,12 @@
 const { sql } = require("../lib/db");
 const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
-const { SESSIONS, json, handleOptions, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot, canonicalSession, timeRangesOverlap } = require("../lib/config");
+const { SESSIONS, json, handleOptions, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot, canonicalSession, timeRangesOverlap, isValidISODate } = require("../lib/config");
 const { allowRequest } = require("../lib/rate-limit");
+const { scrubExpiredUnpaidBookings } = require("../lib/retention");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
   if(req.method!=="GET") return json(res,405,{error:"Method not allowed."});
-  if(!allowRequest(req,"availability",120,60*1000))
-    return json(res,429,{error:"Too many availability requests. Please wait a moment."});
   try{
     const date=String(req.query?.date||"");
     const rawSession=String(req.query?.session||"");
@@ -15,8 +14,11 @@ module.exports = async (req,res) => {
     const meta=sessionName ? SESSIONS[sessionName] : null;
     if(!meta) return json(res,400,{error:"Invalid session."});
 
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(date))
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || !isValidISODate(date))
       return json(res,400,{error:"Invalid date."});
+    if(!await allowRequest(req,"availability",120,60*1000))
+      return json(res,429,{error:"Too many availability requests. Please wait a moment."});
+    await scrubExpiredUnpaidBookings();
     if(!WORK_DAYS.has(new Date(date+"T00:00:00Z").getUTCDay()))
       return json(res,200,{date,slots:[]});
 
