@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
-const { SESSIONS, json, handleOptions, isValidEmail, isValidHHMM, isValidISODate, clean, toBlocks, validateSlot, canonicalSession, WORK_START, WORK_END } = require("../lib/config");
+const { SESSIONS, json, handleOptions, isValidEmail, isValidHHMM, isValidISODate, clean, toBlocks, validateSlot, canonicalSession, WORK_START, WORK_END, timeRangesOverlap } = require("../lib/config");
 const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
@@ -124,6 +124,22 @@ module.exports = async (req,res) => {
         LIMIT 1
       `;
       if(lockedRows[0]) blockers.set(lockedRows[0].id,lockedRows[0]);
+    }
+
+    const activeBookingRows=await sql`
+      SELECT b.*, b.expires_at AS slot_lock_expires_at
+      FROM bookings b
+      WHERE b.booking_date=${date}
+        AND (
+          (b.payment_status='paid' AND b.booking_status IN ('confirmed','paid_pending_confirmation','calendar_processing'))
+          OR (b.booking_status='pending' AND b.expires_at > NOW())
+        )
+    `;
+    for(const row of activeBookingRows){
+      const bookedStart=String(row.booking_time).slice(0,5);
+      if(timeRangesOverlap(time,meta.duration,bookedStart,Number(row.duration_minutes))){
+        blockers.set(row.id,row);
+      }
     }
 
     if(blockers.size){
