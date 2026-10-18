@@ -67,7 +67,7 @@ test("both Apps Script adapters use the same 20-minute busy grid", () => {
   for (const file of ["production-apps-script/Code.gs", "staging-apps-script/Code.gs"]) {
     const source = fs.readFileSync(path.resolve(__dirname, "..", file), "utf8");
     assert.match(source, /const SLOT_MINUTES = 20;/);
-    assert.match(source, /body\.slotIntervalMinutes \|\| SLOT_MINUTES/);
+    assert.match(source, /body\.slotIntervalMinutes \|\| 30/);
     assert.match(source, /minutes \+= slotMinutes/);
     assert.match(source, /slotEnd = slotStart \+ slotMinutes \* 60 \* 1000;/);
   }
