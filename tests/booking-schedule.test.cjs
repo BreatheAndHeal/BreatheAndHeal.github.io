@@ -103,3 +103,11 @@ test("FAQ answers toggle explicitly and have a visible open state", () => {
   assert.ok(html.includes('.faq details[open]>p{display:block}'));
   assert.ok(html.includes('.faq details:not([open])>p{display:none}'));
 });
+
+test("FAQ cards lift gently and show a soft shadow on hover and keyboard focus", () => {
+  const html = fs.readFileSync(path.resolve(__dirname, "../index.html"), "utf8");
+  assert.ok(html.includes("transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease,background .22s ease"));
+  assert.ok(html.includes(".faq details:hover,.faq details:focus-within"));
+  assert.ok(html.includes("transform:translateY(-3px)"));
+  assert.ok(html.includes("box-shadow:0 12px 26px rgba(45,52,47,.08)"));
+});
