@@ -13,8 +13,12 @@ test("payment recovery contact displays one accurate support email", () => {
 });
 
 
-test("homepage does not make an unverified people-supported claim", () => {
+test("homepage has the original 200+ card and uses No rush instead of Session lengths", () => {
   const html = fs.readFileSync(path.resolve(__dirname, "../index.html"), "utf8");
-  assert.doesNotMatch(html, /200\+\s*<\/div>\s*<b>People supported<\/b>/i);
-  assert.match(html, /<div class="impact-num">No rush<\/div><b>At your own pace<\/b>/);
+  const cards = [...html.matchAll(/<article class="impact">([\s\S]*?)<\/article>/g)].map((match) => match[1]);
+
+  assert.equal(cards.length, 4, "homepage must keep exactly four impact cards");
+  assert.match(cards[1], /<div class="impact-num">200\+<\/div><b>People supported<\/b><span>Across different personal situations<\/span>/);
+  assert.match(cards[3], /<div class="impact-num">No rush<\/div><b>At your own pace<\/b><span>Share only what feels comfortable<\/span>/);
+  assert.doesNotMatch(html, /<div class="impact-num">3<\/div><b>Session lengths<\/b>/);
 });
