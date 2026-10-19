@@ -24,17 +24,6 @@ function isPreviewHost(req){
   return false;
 }
 
-let consentSchemaPromise=null;
-async function ensureConsentSchema(){
-  if(!consentSchemaPromise){
-    consentSchemaPromise=(async()=>{
-      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_accepted BOOLEAN NOT NULL DEFAULT FALSE`;
-      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ`;
-    })().catch(err=>{consentSchemaPromise=null;throw err;});
-  }
-  return consentSchemaPromise;
-}
-
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
   if(req.method !== "POST") return json(res,405,{error:"Method not allowed."});
@@ -100,8 +89,7 @@ module.exports = async (req,res) => {
       return json(res,503,{error:"Availability is temporarily unavailable. Please try again shortly."});
     }
 
-    // Ensure existing databases have the consent evidence columns before booking insert.
-    await ensureConsentSchema();
+    // The consent evidence columns are created by schema.sql; the staging app role does not need ALTER TABLE privileges.
 
     // Remove expired holds so slots become reusable.
     await sql`DELETE FROM slot_locks WHERE expires_at IS NOT NULL AND expires_at < NOW()`;
