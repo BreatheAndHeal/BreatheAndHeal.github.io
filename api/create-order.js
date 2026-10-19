@@ -5,7 +5,7 @@ const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { createBookingAccessToken } = require("../lib/booking-access");
 const { allowRequest } = require("../lib/rate-limit");
 const { normalizeDatabaseDate } = require("../lib/date-utils");
-const { scrubExpiredUnpaidBookings } = require("../lib/retention");
+const { cleanupExpiredRecords } = require("../lib/retention");
 
 function isPreviewHost(req){
   let host=String(req.headers["x-forwarded-host"]||req.headers.host||"").split(",")[0].trim().toLowerCase();
@@ -71,7 +71,7 @@ module.exports = async (req,res) => {
 
     if(!await allowRequest(req,"create-order",12,10*60*1000))
       return json(res,429,{error:"Too many booking attempts. Please wait a little and try again."});
-    await scrubExpiredUnpaidBookings();
+    await cleanupExpiredRecords();
 
     const keyId=process.env.RAZORPAY_KEY_ID;
     const keySecret=process.env.RAZORPAY_KEY_SECRET;
