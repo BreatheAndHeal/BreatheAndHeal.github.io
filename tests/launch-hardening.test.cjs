@@ -51,12 +51,14 @@ test("expired unpaid booking retention anonymizes at 90 days and purges eligible
   assert.match(src, /UPDATE bookings/);
   assert.match(src, /DELETE FROM bookings/);
   assert.match(src, /payment_status <> 'paid'/);
-  assert.match(src, /razorpay_payment_id IS NULL/);
+  assert.equal((src.match(/razorpay_payment_id IS NULL/g) || []).length, 2);
+  assert.equal((src.match(/paid_at IS NULL/g) || []).length, 2);
   assert.match(src, /expires_at < NOW\(\) - INTERVAL '90 days'/);
   assert.match(src, /expires_at < NOW\(\) - INTERVAL '180 days'/);
   assert.match(src, /DELETE FROM api_rate_limits/);
   assert.match(src, /updated_at < NOW\(\) - INTERVAL '24 hours'/);
   assert.match(src, /DELETE FROM slot_locks/);
+  assert.match(src, /slot_date < CURRENT_DATE/);
 });
 
 test("captured-payment webhook preserves in-flight Calendar state and does not await Calendar/Meet", () => {
