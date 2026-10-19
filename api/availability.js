@@ -2,7 +2,7 @@ const { sql } = require("../lib/db");
 const { getBlockedSlotsFromCalendar } = require("../lib/calendar-busy");
 const { SESSIONS, json, handleOptions, SLOT_MINUTES, WORK_START, WORK_END, WORK_DAYS, addMinutes, toBlocks, validateSlot, canonicalSession, timeRangesOverlap, isValidISODate } = require("../lib/config");
 const { allowRequest } = require("../lib/rate-limit");
-const { scrubExpiredUnpaidBookings } = require("../lib/retention");
+const { cleanupExpiredRecords } = require("../lib/retention");
 
 module.exports = async (req,res) => {
   if(handleOptions(req,res)) return;
@@ -18,7 +18,7 @@ module.exports = async (req,res) => {
       return json(res,400,{error:"Invalid date."});
     if(!await allowRequest(req,"availability",120,60*1000))
       return json(res,429,{error:"Too many availability requests. Please wait a moment."});
-    await scrubExpiredUnpaidBookings();
+    await cleanupExpiredRecords();
     if(!WORK_DAYS.has(new Date(date+"T00:00:00Z").getUTCDay()))
       return json(res,200,{date,slots:[]});
 

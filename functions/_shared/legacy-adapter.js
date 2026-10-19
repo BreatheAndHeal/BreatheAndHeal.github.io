@@ -22,7 +22,7 @@ function errorResponse(status, message) {
  * Adapt the existing Vercel-style handlers to Cloudflare Pages Functions.
  * Booking and payment business logic stays in the existing API modules.
  */
-export async function runLegacyHandler(request, handler) {
+export async function runLegacyHandler(request, handler, context = {}) {
   const url = new URL(request.url);
   const origin = request.headers.get("origin");
   const configuredOrigins = new Set(
@@ -76,6 +76,9 @@ export async function runLegacyHandler(request, handler) {
     headers: requestHeaders,
     query: Object.fromEntries(url.searchParams.entries()),
     body: parsedBody,
+    waitUntil: typeof context.waitUntil === "function"
+      ? (promise) => context.waitUntil(promise)
+      : undefined,
     async *[Symbol.asyncIterator]() {
       if (rawBody) yield rawBody;
     }
