@@ -41,15 +41,34 @@ test("rate-limit storage is shared/atomic and does not persist raw client IPs", 
   }
 });
 
-test("expired unpaid booking retention is limited to 90 days and clears optional sensitive fields", () => {
+test("expired unpaid booking retention anonymizes at 90 days and purges eligible rows at 180 days", () => {
   assert.equal(retention.RETENTION_DAYS, 90);
+  assert.equal(retention.PURGE_DAYS, 180);
   const src = fs.readFileSync(path.join(root, "lib/retention.js"), "utf8");
   for (const field of ["customer_whatsapp = ''", "concern = NULL", "message = NULL", "birth_date = NULL", "birth_time = NULL", "birth_place = NULL"]) {
     assert.ok(src.includes(field), "retention sweep should clear " + field);
   }
+  assert.match(src, /UPDATE bookings/);
+  assert.match(src, /DELETE FROM bookings/);
   assert.match(src, /payment_status <> 'paid'/);
+  assert.match(src, /razorpay_payment_id IS NULL/);
   assert.match(src, /expires_at < NOW\(\) - INTERVAL '90 days'/);
-  assert.match(src, /RETURNING id/);
+  assert.match(src, /expires_at < NOW\(\) - INTERVAL '180 days'/);
+  assert.match(src, /DELETE FROM api_rate_limits/);
+  assert.match(src, /updated_at < NOW\(\) - INTERVAL '24 hours'/);
+  assert.match(src, /DELETE FROM slot_locks/);
+});
+
+test("captured-payment webhook preserves in-flight Calendar state and does not await Calendar/Meet", () => {
+  const webhook = fs.readFileSync(path.join(root, "api/webhook.js"), "utf8");
+  const edgeAdapter = fs.readFileSync(path.join(root, "functions/_shared/legacy-adapter.js"), "utf8");
+  const edgeRoute = fs.readFileSync(path.join(root, "functions/api/webhook.js"), "utf8");
+  assert.match(webhook, /'confirmed','paid_slot_conflict','calendar_processing'/);
+  assert.match(webhook, /paid_at=COALESCE\(paid_at,NOW\(\)\)/);
+  assert.match(webhook, /req\.waitUntil\(confirmationPromise\)/);
+  assert.doesNotMatch(webhook, /await confirmPaidBooking\(booking\.id\)/);
+  assert.match(edgeAdapter, /context\.waitUntil/);
+  assert.match(edgeRoute, /runLegacyHandler\(request, handler, \{ waitUntil \}\)/);
 });
 
 test("paid-booking Calendar recheck fails closed and leaves confirmation retryable", () => {
