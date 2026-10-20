@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
+<!-- Legacy-domain migration: send visitors and crawlers to The Unsaid's canonical domain. -->
+<meta http-equiv="refresh" content="0;url=https://theunsaidcare.com/">
+<script>
+  // Preserve campaign parameters and fragments for users arriving via old links.
+  window.location.replace("https://theunsaidcare.com/" + window.location.search + window.location.hash);
+</script>
+
 <!-- The Unsaid booking system: live slots + secure payment verification -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -9,16 +16,16 @@
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <meta name="google-site-verification" content="RwH-iOLWgNU559l7vqnCDXPYzUP5z0D0Sg7wzU43Djw" />
-<link rel="canonical" href="https://breatheandheal.github.io/">
+<link rel="canonical" href="https://theunsaidcare.com/">
 <meta property="og:title" content="The Unsaid | For everything you never knew how to say.">
 <meta property="og:description" content="Some things become lighter the moment they are finally spoken.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://breatheandheal.github.io/">
+<meta property="og:url" content="https://theunsaidcare.com/">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#f4efe6">
 <title>The Unsaid | For everything you never knew how to say.</title>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"The Unsaid","url":"https://breatheandheal.github.io/","description":"A private online space for emotional guidance, listening, personal perspective and Vedic astrology guidance."}
+{"@context":"https://schema.org","@type":"WebSite","name":"The Unsaid","url":"https://theunsaidcare.com/","description":"A private online space for emotional guidance, listening, personal perspective and Vedic astrology guidance."}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
