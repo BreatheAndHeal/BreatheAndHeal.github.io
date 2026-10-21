@@ -6,7 +6,7 @@ A calm, private online space for honest conversations, emotional support and per
 - Primary domain: https://theunsaidcare.com (custom-domain activation and verification must be completed before announcing it as the primary URL)
 - Existing Cloudflare Pages fallback: https://the-unsaid-bg2.pages.dev — keep available during domain cutover and rollback checks
 - Public contact: theunsaid.care@gmail.com
-- Phone / WhatsApp: 7905806974
+- Phone / WhatsApp: 8707236175
 - Cloudflare Pages branch: `migration/cloudflare-preview`
 - Vercel `main` remains a separate rollback deployment; do not assume the two branches are identical.
 - SEO discovery: `https://theunsaidcare.com/robots.txt` and `https://theunsaidcare.com/sitemap.xml` after the custom domain is active and `PUBLIC_SITE_URL` has been updated.
