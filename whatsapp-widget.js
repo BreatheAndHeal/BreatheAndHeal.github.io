@@ -1,7 +1,7 @@
 (() => {
   const link = document.createElement("a");
   link.id = "the-unsaid-whatsapp-float";
-  link.href = "https://wa.me/917905806974?text=Hi%20The%20Unsaid%2C%20I%20want%20to%20know%20more";
+  link.href = "https://wa.me/918707236175?text=Hi%20The%20Unsaid%2C%20I%20want%20to%20know%20more";
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   const isSafetyPage = /(?:^|\/)crisis\.html$/i.test(window.location.pathname);
