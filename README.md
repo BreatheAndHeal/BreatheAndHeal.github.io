@@ -3,10 +3,10 @@
 A calm, private online space for honest conversations, emotional support and personal perspective.
 
 ## Current launch checklist
-- Real WhatsApp/phone: 7905806974
+- Real WhatsApp/phone: 8707236175
 - Public website: https://the-unsaid-bg2.pages.dev
 - Public contact: theunsaid.care@gmail.com
-- Phone / WhatsApp: 7905806974
+- Phone / WhatsApp: 8707236175
 - Cloudflare Pages branch: `migration/cloudflare-preview`
 - Vercel `main` remains a separate rollback deployment; do not assume the two branches are identical.
 - SEO discovery: robots.txt + sitemap.xml
