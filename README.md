@@ -3,7 +3,7 @@
 A calm, private online space for honest conversations, emotional support and personal perspective.
 
 ## Current launch checklist
-- Real WhatsApp/phone: 7905806974
+- Real WhatsApp/phone: 8707236175
 - Primary email: tatttvamasii@gmail.com
 - Alternate email: healing2411@gmail.com
 - GitHub Pages source: main / root
