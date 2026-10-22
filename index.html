@@ -335,7 +335,7 @@ function renderBookingSessionPrices(){
  document.querySelectorAll("#session option, #astroSession option").forEach(option=>{
   const session=BOOKING_SESSIONS[option.value];
   if(!session)return;
-  const label=option.textContent.trim().replace(/\\s*·\\s*₹[\\d,]+$/,"");
+  const label=option.textContent.trim().replace(/\s*·\s*₹[\d,]+$/,"");
   option.textContent=label+" · ₹"+session.amount.toLocaleString("en-IN");
  });
 }
