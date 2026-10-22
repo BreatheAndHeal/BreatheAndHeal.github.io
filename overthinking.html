@@ -79,6 +79,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .site-copyright{text-align:center;margin:8px 0 0;font-size:12px;color:var(--muted,#68736b)}
 @media(max-width:560px){.site-footer-inner{padding:0 16px}.site-footer-links{gap:9px 14px}.site-social-link{width:40px;height:40px}}
 
+
+.related-guides{margin:42px 0 28px;padding:24px;background:var(--paper,#fffdf8);border:1px solid var(--line,#ddd6ca);border-radius:22px}
+.related-guides h2{margin:0 0 16px;font:600 28px Georgia,serif;color:var(--ink,#27312b)}
+.related-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.related-card{display:block;min-width:0;padding:16px;border:1px solid var(--line,#ddd6ca);border-radius:16px;background:var(--bg,#f6f1e8);text-decoration:none;color:var(--ink,#27312b);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.related-card:hover{transform:translateY(-3px);border-color:var(--sage,#758b79);box-shadow:0 12px 24px rgba(39,49,43,.07)}
+.related-card strong{display:block;margin-bottom:6px;font:600 18px Georgia,serif}
+.related-card span{display:block;color:var(--muted,#68736b);font-size:13px;line-height:1.55}
+.related-card:focus-visible{outline:2px solid var(--sage,#758b79);outline-offset:3px}
+@media(max-width:650px){.related-guides{padding:18px}.related-grid{grid-template-columns:1fr}.related-card{padding:14px}}
 </style>
 </head>
 <body>
@@ -141,6 +151,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <h2>Sometimes you do not need another article</h2>
 <p>You may understand the pattern already. What you may not have is a place to say the whole thing without having to make it sound neat first.</p>
 <p>You can bring the messy version—the repeating thought, the unanswered question, the decision you keep postponing, or simply the feeling that you are tired of carrying everything in your own head.</p>
+
+<section class="related-guides" aria-labelledby="related-guides-title"><h2 id="related-guides-title">Related guides</h2><div class="related-grid"><a class="related-card" href="/life-decisions"><strong>Life decisions</strong><span>Move from looping scenarios toward a clearer next step.</span></a><a class="related-card" href="/loneliness"><strong>Loneliness</strong><span>Explore why you can feel alone even around other people.</span></a><a class="related-card" href="/difficult-conversations"><strong>Difficult conversations</strong><span>Find a gentler way to say what you have been holding back.</span></a></div></section>
 
 <div class="links">
 <a class="primary" href="/#book">Talk it through privately →</a>
