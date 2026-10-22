@@ -97,6 +97,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .order-summary-item dd{margin:0;font-size:13px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
 @media(max-width:560px){.order-summary{padding:14px}.order-summary-grid{gap:9px 12px}.order-summary-item dd{font-size:12px}}
 
+
+.guide-section{padding:72px 0;background:var(--bg)}
+.guide-wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(220px,.85fr);gap:48px;align-items:center}
+.guide-copy .section-title{margin-top:10px}
+.guide-copy p{max-width:700px}
+.guide-facts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0 0}
+.guide-facts div{padding:15px 16px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+.guide-facts dt{font-size:12px;color:var(--muted);margin-bottom:4px}
+.guide-facts dd{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+.guide-portrait{display:grid;place-items:center;min-height:250px}
+.guide-emblem-circle{width:min(290px,75vw);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,#fffdf8 0%,#e8e2d7 100%);border:1px solid #ddd6ca;box-shadow:0 20px 60px rgba(39,49,43,.08)}
+.guide-emblem-circle img{display:block;width:58%;height:58%;object-fit:contain}
+@media(max-width:700px){.guide-wrap{grid-template-columns:1fr;gap:24px}.guide-portrait{order:-1;min-height:0}.guide-emblem-circle{width:190px}.guide-facts{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.guide-facts{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -256,6 +270,24 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
     <article class="feedback-card"><div class="quote-mark" aria-hidden="true">“</div><p>The aim is simple: leave with more clarity than you came in with.</p><small>Clarity, without guaranteed outcomes</small></article>
   </div>
 </div>
+</section>
+
+
+<section class="guide-section" id="guide">
+ <div class="wrap guide-wrap">
+  <div class="guide-copy">
+   <p class="kicker">MEET YOUR GUIDE</p>
+   <h2 class="section-title">Meet [NAME].</h2>
+   <p class="section-copy">[INTRO]</p>
+   <dl class="guide-facts">
+    <div><dt>Experience</dt><dd>[EXPERIENCE]</dd></div>
+    <div><dt>Languages</dt><dd>Hindi, Hinglish and English</dd></div>
+   </dl>
+  </div>
+  <div class="guide-portrait">
+   <div class="guide-emblem-circle"><img src="/assets/logo-emblem.svg" alt="The Unsaid emblem" width="180" height="180"></div>
+  </div>
+ </div>
 </section>
 
 <section class="soft" id="faq"><div class="wrap narrow"><div class="center"><p class="kicker">QUESTIONS</p><h2 class="section-title">Before you book.</h2><p class="section-copy">A few useful details before you choose a session.</p></div><div class="faq">
