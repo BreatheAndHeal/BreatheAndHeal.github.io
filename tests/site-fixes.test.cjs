@@ -18,6 +18,12 @@ const publicPages = [
   "terms.html", "refunds.html", "privacy.html", "crisis.html", "404.html"
 ];
 
+test("homepage has the agreed title and description", () => {
+  const home = html("index.html");
+  assert.match(home, /<title>The Unsaid \| Emotional Guidance &amp; Astrology<\/title>/);
+  assert.ok(home.includes('content="A calm, private online space for emotional guidance and Vedic astrology. One-to-one in Hindi, Hinglish or English. From ₹499."'));
+});
+
 test("homepage has two order summaries sourced from existing booking session data", () => {
   const home = html("index.html");
   assert.match(home, /id="emotionalOrderSummary"/);
