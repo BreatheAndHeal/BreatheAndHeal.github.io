@@ -102,6 +102,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .site-copyright{text-align:center;margin:8px 0 0;font-size:12px;color:var(--muted,#68736b)}
 @media(max-width:560px){.site-footer-inner{padding:0 16px}.site-footer-links{gap:9px 14px}.site-social-link{width:40px;height:40px}}
 
+
+.guide-layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:36px;align-items:center;max-width:900px}
+.guide-avatar{width:190px;height:190px;border:1px solid var(--line);border-radius:50%;background:#e9efe5;display:grid;place-items:center;overflow:hidden;margin:auto}
+.guide-avatar img{display:block;width:66%;height:66%;object-fit:contain}
+.guide-avatar-fallback{font-size:72px;line-height:1;color:#526957}
+.guide-copy .section-title{margin-bottom:12px}
+.guide-copy p{color:var(--muted);font-size:15px}
+.guide-copy .guide-name{font:600 25px/1.2 "Playfair Display",serif;color:var(--ink);margin:0 0 12px}
+.guide-photo-note{font-size:12px!important;color:var(--muted)!important}
+@media(max-width:650px){.guide-layout{grid-template-columns:1fr;gap:22px;text-align:center}.guide-avatar{width:160px;height:160px}.guide-copy .section-title{font-size:36px}}
+
 </style>
 <meta property="og:site_name" content="The Unsaid">
 <meta property="og:image" content="https://theunsaidcare.com/og-image.jpg">
@@ -251,8 +262,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
     <p class="section-copy narrow">One-to-one conversations and guidance across emotions, relationships, overthinking, life decisions and personal direction.</p>
   </div>
   <div class="impact-grid">
-    <article class="impact"><div class="impact-num">2+</div><b>Years of practice</b><span>One-to-one conversations and guidance</span></article>
-    <article class="impact"><div class="impact-num">200+</div><b>People supported</b><span>Across different personal situations</span></article>
+    <article class="impact"><div class="impact-num">1:1</div><b>One-to-one space</b><span>Focused attention on your concern</span></article>
+    <article class="impact"><div class="impact-num">Your pace</div><b>No pressure to perform</b><span>Share only what feels comfortable</span></article>
     <article class="impact"><div class="impact-num">1:1</div><b>Focused attention</b><span>One person, one conversation, one space</span></article>
     <article class="impact"><div class="impact-num">No rush</div><b>At your own pace</b><span>Share only what feels comfortable</span></article>
   </div>
@@ -268,6 +279,24 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
     <article class="feedback-card"><div class="quote-mark" aria-hidden="true">“</div><p>The aim is simple: leave with more clarity than you came in with.</p><small>Clarity, without guaranteed outcomes</small></article>
   </div>
 </div>
+</section>
+
+<section class="soft" id="guide">
+  <div class="wrap guide-layout">
+    <div class="guide-avatar" aria-label="The Unsaid guide emblem">
+      <img src="/assets/logo-emblem.svg" alt="" width="160" height="160" onerror="this.style.display='none';this.nextElementSibling.hidden=false">
+      <span class="guide-avatar-fallback" hidden aria-hidden="true">✦</span>
+    </div>
+    <div class="guide-copy">
+      <p class="kicker">MEET YOUR GUIDE</p>
+      <h2 class="section-title">A person behind the conversation.</h2>
+      <p class="guide-name">[NAME]</p>
+      <p>[INTRO]</p>
+      <p><strong>Experience:</strong> [EXPERIENCE]</p>
+      <p><strong>Languages:</strong> Hindi · Hinglish · English</p>
+      <p class="guide-photo-note">The emblem is shown until a personal photo is supplied. No stock photo is used.</p>
+    </div>
+  </div>
 </section>
 
 <section class="soft" id="faq"><div class="wrap narrow"><div class="center"><p class="kicker">QUESTIONS</p><h2 class="section-title">Before you book.</h2><p class="section-copy">A few useful details before you choose a session.</p></div><div class="faq">
