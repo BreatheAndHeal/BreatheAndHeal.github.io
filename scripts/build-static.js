@@ -102,6 +102,7 @@ function requirePublicOrigin() {
 function rewriteLegacyOrigin(publicOrigin) {
   const allowedTextExtensions = new Set([".html", ".xml", ".txt", ".js", ".mjs"]);
   const oldOrigin = "https://breatheandheal.github.io";
+  const productionOrigin = "https://theunsaidcare.com";
   let updatedFiles = 0;
 
   function visit(folder) {
@@ -114,7 +115,9 @@ function rewriteLegacyOrigin(publicOrigin) {
 
       if (!allowedTextExtensions.has(path.extname(entry.name).toLowerCase())) continue;
       const original = fs.readFileSync(fullPath, "utf8");
-      const updated = original.replaceAll(oldOrigin, publicOrigin);
+      const updated = original
+        .replaceAll(oldOrigin, publicOrigin)
+        .replaceAll(productionOrigin, publicOrigin);
       if (updated !== original) {
         fs.writeFileSync(fullPath, updated);
         updatedFiles += 1;
@@ -125,7 +128,7 @@ function rewriteLegacyOrigin(publicOrigin) {
   visit(output);
 
   // Fail closed: do not publish HTML, metadata, or discovery files that still
-  // canonicalize the site to the old GitHub Pages host.
+  // point to the legacy host or to production when building a non-production preview.
   function validate(folder) {
     for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
       const fullPath = path.join(folder, entry.name);
@@ -137,6 +140,9 @@ function rewriteLegacyOrigin(publicOrigin) {
       const contents = fs.readFileSync(fullPath, "utf8");
       if (contents.includes(oldOrigin)) {
         throw new Error("Old GitHub Pages origin remains in public file: " + path.relative(output, fullPath));
+      }
+      if (publicOrigin !== productionOrigin && contents.includes(productionOrigin)) {
+        throw new Error("Production origin remains in non-production public file: " + path.relative(output, fullPath));
       }
     }
   }
