@@ -65,6 +65,20 @@ header{background:rgba(246,241,232,.92);border-bottom-color:var(--line)}
 .topic-hint,.chart-note,.feedback-note,.astro-note{color:var(--muted)}
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
 .topic:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
+
+.site-footer{padding:34px 0 24px;margin-top:0;border-top:1px solid var(--line,#ddd6ca);color:var(--muted,#68736b);font-family:inherit}
+.site-footer-inner{max-width:1180px;margin:0 auto;padding:0 24px}
+.site-footer-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px 20px;font-size:12px;line-height:1.6}
+.site-footer-links a{color:inherit;text-decoration:none}
+.site-footer-links a:hover{color:var(--ink,#27312b);text-decoration:underline;text-underline-offset:3px}
+.site-socials{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;margin:18px 0 10px}
+.site-social-link{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--line,#ddd6ca);border-radius:50%;background:var(--paper,#fffdf8);color:#526957;transition:background .2s ease,color .2s ease,transform .2s ease,border-color .2s ease}
+.site-social-link:hover{background:var(--sage2,#dfe8dc);border-color:var(--sage,#758b79);transform:translateY(-2px)}
+.site-social-link:focus-visible,.site-footer a:focus-visible{outline:2px solid var(--sage,#758b79);outline-offset:3px}
+.site-social-link svg{display:block;width:20px;height:20px;fill:currentColor}
+.site-copyright{text-align:center;margin:8px 0 0;font-size:12px;color:var(--muted,#68736b)}
+@media(max-width:560px){.site-footer-inner{padding:0 16px}.site-footer-links{gap:9px 14px}.site-social-link{width:40px;height:40px}}
+
 </style>
 </head>
 <body>
@@ -180,5 +194,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <p class="small"><strong>Further reading:</strong> <a href="https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/how-to-talk-about-your-mental-health/" target="_blank" rel="noopener noreferrer">NHS: How to talk about your mental health</a> and <a href="https://www.nhs.uk/every-mind-matters/lifes-challenges/maintaining-healthy-relationships-and-mental-wellbeing/" target="_blank" rel="noopener noreferrer">NHS: Healthy relationships and communication</a>.</p>
 </div>
 </div></main>
+<footer class="site-footer"><div class="site-footer-inner"><nav class="site-footer-links" aria-label="Footer navigation"><a href="/#book">Contact</a><a href="/journal">Journal</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refunds">Cancellation &amp; refunds</a><a href="/crisis">Safety &amp; boundaries</a></nav><div class="site-socials" aria-label="Social links"><a class="site-social-link" href="https://wa.me/918707236175?text=Hi%20The%20Unsaid%2C%20I%20want%20to%20know%20more" target="_blank" rel="noopener noreferrer" aria-label="The Unsaid on WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2a9.88 9.88 0 0 0-8.47 14.98L2.2 22l5.18-1.36A9.9 9.9 0 1 0 12.04 2Zm0 17.9a7.98 7.98 0 0 1-4.07-1.12l-.29-.17-3.07.81.82-2.99-.19-.31A7.96 7.96 0 1 1 12.04 19.9Zm4.37-5.97c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.54.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.39-.4-.54-.41l-.46-.01c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.31.98 2.47c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.39 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.43-.58 1.63-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z"/></svg></a></div><p class="site-copyright">© 2026 The Unsaid</p></div></footer>
 <script src="whatsapp-widget.js" defer></script></body>
 </html>
