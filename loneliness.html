@@ -79,6 +79,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .site-copyright{text-align:center;margin:8px 0 0;font-size:12px;color:var(--muted,#68736b)}
 @media(max-width:560px){.site-footer-inner{padding:0 16px}.site-footer-links{gap:9px 14px}.site-social-link{width:40px;height:40px}}
 
+
+.related-guides{margin:42px 0 28px;padding:24px;background:var(--paper,#fffdf8);border:1px solid var(--line,#ddd6ca);border-radius:22px}
+.related-guides h2{margin:0 0 16px;font:600 28px Georgia,serif;color:var(--ink,#27312b)}
+.related-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.related-card{display:block;min-width:0;padding:16px;border:1px solid var(--line,#ddd6ca);border-radius:16px;background:var(--bg,#f6f1e8);text-decoration:none;color:var(--ink,#27312b);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.related-card:hover{transform:translateY(-3px);border-color:var(--sage,#758b79);box-shadow:0 12px 24px rgba(39,49,43,.07)}
+.related-card strong{display:block;margin-bottom:6px;font:600 18px Georgia,serif}
+.related-card span{display:block;color:var(--muted,#68736b);font-size:13px;line-height:1.55}
+.related-card:focus-visible{outline:2px solid var(--sage,#758b79);outline-offset:3px}
+@media(max-width:650px){.related-guides{padding:18px}.related-grid{grid-template-columns:1fr}.related-card{padding:14px}}
 </style>
 </head>
 <body>
@@ -144,6 +154,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <h2>Sometimes what you are missing is simply a place to be honest</h2>
 <p>Not every lonely moment needs a grand solution. Sometimes you need one conversation where you do not have to perform, reassure everyone else, or turn your feelings into something easier to hear.</p>
 <p>You can start with the sentence you have been keeping to yourself: <em>“I don't really know how to explain it, but I've been feeling alone.”</em></p>
+
+<section class="related-guides" aria-labelledby="related-guides-title"><h2 id="related-guides-title">Related guides</h2><div class="related-grid"><a class="related-card" href="/heartbreak"><strong>Heartbreak</strong><span>Make room for grief, change and the difficult middle of moving forward.</span></a><a class="related-card" href="/difficult-conversations"><strong>Difficult conversations</strong><span>Try a simple framework for being more honest with someone you trust.</span></a><a class="related-card" href="/overthinking"><strong>Overthinking</strong><span>Notice when repeating thoughts make it harder to feel connected.</span></a></div></section>
 
 <div class="links">
 <a class="primary" href="/#book">Talk it through privately →</a>
