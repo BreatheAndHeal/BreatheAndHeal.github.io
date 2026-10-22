@@ -102,6 +102,7 @@ function requirePublicOrigin() {
 function rewriteLegacyOrigin(publicOrigin) {
   const allowedTextExtensions = new Set([".html", ".xml", ".txt", ".js", ".mjs"]);
   const oldOrigin = "https://breatheandheal.github.io";
+  const productionOrigin = "https://theunsaidcare.com";
   let updatedFiles = 0;
 
   function visit(folder) {
@@ -114,7 +115,7 @@ function rewriteLegacyOrigin(publicOrigin) {
 
       if (!allowedTextExtensions.has(path.extname(entry.name).toLowerCase())) continue;
       const original = fs.readFileSync(fullPath, "utf8");
-      const updated = original.replaceAll(oldOrigin, publicOrigin);
+      const updated = original.replaceAll(oldOrigin, publicOrigin).replaceAll(productionOrigin, publicOrigin);
       if (updated !== original) {
         fs.writeFileSync(fullPath, updated);
         updatedFiles += 1;
