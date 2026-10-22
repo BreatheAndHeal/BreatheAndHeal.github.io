@@ -48,9 +48,14 @@ test("visible cards, booking dropdowns, and duration FAQ use the same current op
     assert.equal(html.includes(stale), false, "homepage still contains outdated option: " + stale);
   }
 
-  assert.equal(html.split("Vedic Insight — 20 min · ₹899").length - 1, 4);
-  assert.equal(html.split("Deep Vedic Reading — 40 min · ₹1,399").length - 1, 4);
-  assert.equal(html.split("Complete Vedic Guidance — 60 min · ₹1,999").length - 1, 4);
+  // Three source occurrences are expected: the option value/card binding, the card selector, and the single price map.
+  // The visible labels are rendered from BOOKING_SESSIONS at runtime rather than duplicated as hardcoded option text.
+  assert.equal(html.split("Vedic Insight — 20 min · ₹899").length - 1, 3);
+  assert.equal(html.split("Deep Vedic Reading — 40 min · ₹1,399").length - 1, 3);
+  assert.equal(html.split("Complete Vedic Guidance — 60 min · ₹1,999").length - 1, 3);
+  assert.ok(html.includes("function renderBookingSessionPrices()"));
+  assert.ok(html.includes('const session=BOOKING_SESSIONS[option.value]'));
+  assert.ok(html.includes('option.textContent=label+" · ₹"+session.amount.toLocaleString("en-IN");'));
 
   assert.ok(html.includes('"Vedic Insight — 20 min · ₹899":{amount:899,service:"astrology"}'));
   assert.ok(html.includes('"Deep Vedic Reading — 40 min · ₹1,399":{amount:1399,service:"astrology"}'));
