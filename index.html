@@ -382,9 +382,6 @@ function closeModal(){topicModal.classList.remove("open");document.body.classLis
 modalClose.addEventListener("click",closeModal);topicModal.addEventListener("click",e=>{if(e.target===topicModal)closeModal()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 modalBook.addEventListener("click",()=>{const topic=modalBook.dataset.topic||"";if(modalBook.dataset.service==="astrology"){document.querySelector('[data-service="astrology"]').click();const topicMap=[["Career","Career"],["Relationship","Relationship"],["Marriage","Marriage"],["Family","Family"],["Finances","Finances"],["Life Direction","Life direction"],["Current Phase","Current phase"],["Spiritual Growth","Spiritual growth"]];const matchingTopic=topicMap.find(([prefix])=>topic.startsWith(prefix));const concern=document.getElementById("astroConcern");if(matchingTopic&&concern)concern.value=matchingTopic[1];const astroMessage=document.getElementById("astroMessage");if(astroMessage)astroMessage.value="I'd like to explore: "+topic;}else{const message=document.getElementById("message");if(message)message.value="I'd like to talk about: "+topic;document.querySelector('[data-service="emotional"]').click();}closeModal()});
 
-document.querySelectorAll(".choose").forEach(b=>b.addEventListener("click",()=>{document.querySelector('[data-service="emotional"]').click();document.getElementById("session").value=b.dataset.session}));
-document.querySelectorAll(".astro-choose").forEach(b=>b.addEventListener("click",()=>{document.querySelector('[data-service="astrology"]').click();document.getElementById("astroSession").value=b.dataset.astroSession.startsWith("Vedic Insight")?"Vedic Insight — 20 min · ₹899":b.dataset.astroSession.startsWith("Deep Vedic")?"Deep Vedic Reading — 40 min · ₹1,399":"Complete Vedic Guidance — 60 min · ₹1,999"}));
-
 document.querySelectorAll(".service-tab").forEach(tab=>tab.addEventListener("click",()=>{
  document.querySelectorAll(".service-tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");
  document.querySelectorAll(".booking-panel").forEach(x=>x.classList.remove("active"));
@@ -472,12 +469,14 @@ document.querySelectorAll(".choose").forEach(b=>b.addEventListener("click",()=>{
  document.querySelector('[data-service="emotional"]').click();
  session.value=b.dataset.session;
  loadSlots(date.value,session.value,timeSelect);
+ updateOrderSummary("emotional");
 }));
 document.querySelectorAll(".astro-choose").forEach(b=>b.addEventListener("click",()=>{
  document.querySelector('[data-service="astrology"]').click();
  const v=b.dataset.astroSession.startsWith("Vedic Insight")?"Vedic Insight — 20 min · ₹899":b.dataset.astroSession.startsWith("Deep Vedic")?"Deep Vedic Reading — 40 min · ₹1,399":"Complete Vedic Guidance — 60 min · ₹1,999";
  astroSession.value=v;
  loadSlots(astroDate.value,astroSession.value,astroTimeSelect);
+ updateOrderSummary("astrology");
 }));
 
 function setStatus(el,msg){el.textContent=msg}
