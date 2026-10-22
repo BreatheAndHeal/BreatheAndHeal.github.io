@@ -145,6 +145,78 @@ function rewriteLegacyOrigin(publicOrigin) {
   return updatedFiles;
 }
 
+function normalizeExtensionlessRoutes(publicOrigin) {
+  let updatedFiles = 0;
+
+  function cleanPathname(pathname) {
+    if (/\/index\.html$/i.test(pathname)) {
+      return pathname.slice(0, -"index.html".length) || "/";
+    }
+    return pathname.replace(/\.html$/i, "");
+  }
+
+  function normalizeLocalUrl(rawValue, absoluteOutput) {
+    let parsed;
+    try {
+      parsed = new URL(rawValue, publicOrigin + "/");
+    } catch {
+      return rawValue;
+    }
+
+    // Never rewrite external links. Only URLs on this site's chosen origin
+    // are normalized to match Cloudflare Pages' extensionless HTML routes.
+    if (parsed.origin !== publicOrigin) return rawValue;
+
+    const cleanPath = cleanPathname(parsed.pathname);
+    if (cleanPath === parsed.pathname) return rawValue;
+
+    const suffix = cleanPath + parsed.search + parsed.hash;
+    return absoluteOutput ? parsed.origin + suffix : suffix;
+  }
+
+  function visit(folder) {
+    for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+      const fullPath = path.join(folder, entry.name);
+      if (entry.isDirectory()) {
+        visit(fullPath);
+        continue;
+      }
+
+      const extension = path.extname(entry.name).toLowerCase();
+      if (extension !== ".html" && entry.name.toLowerCase() !== "sitemap.xml") continue;
+
+      const original = fs.readFileSync(fullPath, "utf8");
+      let updated = original;
+
+      if (extension === ".html") {
+        // Normalize local navigation links and canonical annotations while
+        // preserving external links, query strings, and fragments.
+        updated = updated.replace(/<(?:a|link)\b[^>]*>/gi, (tag) => {
+          const isCanonical = /^<link\b/i.test(tag) &&
+            /\brel\s*=\s*(["'])canonical\1/i.test(tag);
+          return tag.replace(/\bhref\s*=\s*(["'])(.*?)\1/gi, (match, quote, href) => {
+            return "href=" + quote + normalizeLocalUrl(href, isCanonical) + quote;
+          });
+        });
+      } else {
+        // Sitemap URLs should match the final extensionless destinations,
+        // not HTML URLs that Cloudflare Pages permanently redirects.
+        updated = updated.replace(/<loc>\s*([^<]*?)\s*<\/loc>/gi, (match, loc) => {
+          return "<loc>" + normalizeLocalUrl(loc.trim(), true) + "</loc>";
+        });
+      }
+
+      if (updated !== original) {
+        fs.writeFileSync(fullPath, updated);
+        updatedFiles += 1;
+      }
+    }
+  }
+
+  visit(output);
+  return updatedFiles;
+}
+
 try {
   const publicOrigin = requirePublicOrigin();
   const indexingEnabled = String(process.env.SITE_INDEXING_ENABLED || "false").trim().toLowerCase() === "true";
@@ -152,6 +224,7 @@ try {
   copyPublicTree(root, output);
   enforceRobotsMeta(indexingEnabled);
   const rewrittenCount = rewriteLegacyOrigin(publicOrigin);
+  const normalizedRouteFiles = normalizeExtensionlessRoutes(publicOrigin);
 
   const headersPath = path.join(output, "_headers");
   if (!fs.existsSync(headersPath)) {
@@ -189,6 +262,7 @@ try {
   console.log("Static site built to dist/; backend source and configuration were excluded.");
   console.log("Search indexing is " + (indexingEnabled ? "enabled" : "disabled by default") + ".");
   console.log("Public origin set to " + publicOrigin + "; updated " + rewrittenCount + " file(s).");
+  console.log("Normalized extensionless page URLs in " + normalizedRouteFiles + " public file(s).");
 } catch (error) {
   console.error("Static build failed:", error.message);
   process.exitCode = 1;

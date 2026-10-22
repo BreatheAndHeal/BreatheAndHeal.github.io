@@ -60,6 +60,42 @@ test("Cloudflare build publishes public pages but not backend source", () => {
   const sitemap = fs.readFileSync(path.join(dist, "sitemap.xml"), "utf8");
   assert.ok(sitemap.includes("<loc>" + expectedOrigin + "/</loc>"), "sitemap URLs should use the selected origin");
   assert.equal(sitemap.includes("https://breatheandheal.github.io"), false, "sitemap must not use the old hosting URL");
+  const cleanRoutes = [
+    "journal",
+    "overthinking",
+    "heartbreak",
+    "loneliness",
+    "career-confusion",
+    "life-decisions",
+    "difficult-conversations",
+    "privacy",
+    "terms",
+    "refunds",
+    "crisis"
+  ];
+
+  for (const route of cleanRoutes) {
+    const page = fs.readFileSync(path.join(dist, route + ".html"), "utf8");
+    assert.ok(
+      page.includes('<link rel="canonical" href="' + expectedOrigin + "/" + route + '">'),
+      route + " canonical should use the extensionless URL served by Cloudflare Pages"
+    );
+    assert.doesNotMatch(
+      page,
+      /\bhref=["'][^"']+\.html(?:[?#][^"']*)?["']/i,
+      route + " HTML should link to extensionless local page routes"
+    );
+    assert.ok(
+      sitemap.includes("<loc>" + expectedOrigin + "/" + route + "</loc>"),
+      route + " should appear in the sitemap at its canonical URL"
+    );
+  }
+  assert.doesNotMatch(
+    sitemap,
+    /<loc>[^<]+\.html<\/loc>/i,
+    "sitemap must not list .html URLs that permanently redirect to clean routes"
+  );
+  assert.ok(html.includes('href="/journal"'), "homepage internal journal link should use its clean route");
 });
 
 test("search indexing is enabled only through an explicit build switch", () => {
