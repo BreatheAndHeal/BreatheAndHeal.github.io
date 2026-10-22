@@ -102,7 +102,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <body>
 <header><div class="wrap nav">
 <a class="brand" href="#top"><span class="mark">✦</span><span>The Unsaid</span></a>
-<nav class="links" id="links"><a href="#how">Your session</a><a href="#topics">Topics</a><a href="#sessions">Sessions</a><a href="#astrology">Astrology</a><a href="#checkin">Check-in</a><a href="journal.html">Journal</a><a href="#faq">FAQ</a><a class="nav-cta" href="#book">Book a session</a></nav>
+<nav class="links" id="links"><a href="#sessions">Sessions</a><a href="#astrology">Astrology</a><a href="/journal">Journal</a><a href="#faq">FAQ</a><a class="nav-cta" href="#book">Book a session</a></nav>
 <button class="menu" id="menu" aria-label="Open menu">☰</button>
 </div></header>
 
@@ -158,7 +158,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <button class="topic" data-title="Life decisions" data-desc="Talk through the decision, the fears around it and what matters to you before choosing your next step.">Life decisions</button>
 <button class="topic" data-title="Moving on" data-desc="Moving forward does not mean pretending the past never mattered. It means making room for what comes next.">Moving on</button>
 <button class="topic" data-title="Something else" data-desc="No category needed. Tell us what is on your mind in your own words.">Something else</button>
-</div><p class="topic-hint">Hover or tap any topic.</p>
+</div><p class="topic-hint">Tap any topic.</p>
 </div></section>
 
 
@@ -379,7 +379,7 @@ document.querySelectorAll(".topic").forEach(btn=>{
  btn.addEventListener("click",()=>{if(!btn.dataset.title)return;const topicService=btn.dataset.topicType==="astrology"?"astrology":"emotional";modalKicker.textContent=topicService==="astrology"?"TRADITIONAL VEDIC LENS":"A PLACE TO START";modalBook.textContent=topicService==="astrology"?"Explore Vedic reading →":"Talk about this →";modalBook.dataset.service=topicService;modalTitle.textContent=btn.dataset.title;modalDesc.textContent=btn.dataset.desc;topicModal.classList.add("open");document.body.classList.add("modal-open");modalBook.dataset.topic=btn.dataset.title;setTimeout(()=>modalClose.focus(),20)});
 });
 function closeModal(){topicModal.classList.remove("open");document.body.classList.remove("modal-open")}
-modalClose.addEventListener("click",closeModal);topicModal.addEventListener("click",e=>{if(e.target===topicModal)closeModal()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+modalClose.addEventListener("click",closeModal);topicModal.addEventListener("click",e=>{if(e.target===topicModal)closeModal()});document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();links?.classList.remove("open")}});
 modalBook.addEventListener("click",()=>{const topic=modalBook.dataset.topic||"";if(modalBook.dataset.service==="astrology"){document.querySelector('[data-service="astrology"]').click();const topicMap=[["Career","Career"],["Relationship","Relationship"],["Marriage","Marriage"],["Family","Family"],["Finances","Finances"],["Life Direction","Life direction"],["Current Phase","Current phase"],["Spiritual Growth","Spiritual growth"]];const matchingTopic=topicMap.find(([prefix])=>topic.startsWith(prefix));const concern=document.getElementById("astroConcern");if(matchingTopic&&concern)concern.value=matchingTopic[1];const astroMessage=document.getElementById("astroMessage");if(astroMessage)astroMessage.value="I'd like to explore: "+topic;}else{const message=document.getElementById("message");if(message)message.value="I'd like to talk about: "+topic;document.querySelector('[data-service="emotional"]').click();}closeModal()});
 
 document.querySelectorAll(".service-tab").forEach(tab=>tab.addEventListener("click",()=>{
