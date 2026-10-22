@@ -492,12 +492,14 @@ document.querySelectorAll(".choose").forEach(b=>b.addEventListener("click",()=>{
  document.querySelector('[data-service="emotional"]').click();
  session.value=b.dataset.session;
  loadSlots(date.value,session.value,timeSelect);
+ updateOrderSummary("emotional");
 }));
 document.querySelectorAll(".astro-choose").forEach(b=>b.addEventListener("click",()=>{
  document.querySelector('[data-service="astrology"]').click();
  const v=b.dataset.astroSession.startsWith("Vedic Insight")?"Vedic Insight — 20 min · ₹899":b.dataset.astroSession.startsWith("Deep Vedic")?"Deep Vedic Reading — 40 min · ₹1,399":"Complete Vedic Guidance — 60 min · ₹1,999";
  astroSession.value=v;
  loadSlots(astroDate.value,astroSession.value,astroTimeSelect);
+ updateOrderSummary("astrology");
 }));
 
 function setStatus(el,msg){el.textContent=msg}
