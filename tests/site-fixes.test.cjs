@@ -41,6 +41,7 @@ test("five-item navigation keeps topics and check-in reachable from the hero", (
   const hero = home.match(/<section class="hero">[\s\S]*?<\/section>/)?.[0] || "";
   assert.ok(hero.includes('href="#topics"'));
   assert.ok(hero.includes('href="#checkin"'));
+  assert.ok(hero.includes("Choose a time, pay, get confirmation"), "hero CTA should use the approved wording");
   assert.match(home, /if\(e\.key==="Escape"\)\{closeModal\(\);links\?\.classList\.remove\("open"\)\}/);
 });
 
