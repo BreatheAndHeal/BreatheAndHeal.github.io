@@ -4,7 +4,7 @@
   link.href = "https://wa.me/918707236175?text=Hi%20The%20Unsaid%2C%20I%20want%20to%20know%20more";
   link.target = "_blank";
   link.rel = "noopener noreferrer";
-  const isSafetyPage = /(?:^|\/)crisis\.html$/i.test(window.location.pathname);
+  const isSafetyPage = /(?:^|\/)crisis(?:\.html)?\/?$/i.test(window.location.pathname);
   const label = isSafetyPage ? "General enquiries on WhatsApp" : "Chat on WhatsApp";
   link.setAttribute("aria-label", label + ". For general enquiries and booking questions.");
   link.title = "Contact The Unsaid for general enquiries and booking questions.";
