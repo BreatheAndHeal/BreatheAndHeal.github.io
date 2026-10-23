@@ -15,20 +15,22 @@ test("service switch is balanced and accessible", () => {
   assert.ok(home.includes(".service-switch button{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:44px"));
 });
 
-test("before-payment guidance is a native disclosure and collapses by default on phones", () => {
+test("before-payment guidance is a native disclosure and is collapsed by default in markup", () => {
   const home = read("index.html");
-  assert.ok(home.includes('<details class="before-pay" id="beforePay" aria-labelledby="beforePayTitle" open>'));
+  assert.ok(home.includes('<details class="before-pay" id="beforePay" aria-labelledby="beforePayTitle">'));
+  assert.ok(!home.includes('<details class="before-pay" id="beforePay" aria-labelledby="beforePayTitle" open>'));
   assert.ok(home.includes('<summary class="before-pay-summary">'));
   assert.ok(home.includes('const beforePay=document.getElementById("beforePay");'));
-  assert.ok(home.includes('window.matchMedia("(max-width:560px)").matches) beforePay.open=false;'));
+  assert.ok(home.includes('beforePay.open=!window.matchMedia("(max-width:560px)").matches;'));
   assert.ok(home.includes("Avoid paying twice."));
 });
 
-test("order summary is redesigned into readable mobile rows", () => {
+test("order summary uses readable mobile rows and keeps total in the heading row", () => {
   const home = read("index.html");
-  assert.ok(home.includes(".order-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px}"));
+  assert.ok(home.includes(".order-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px;padding-top:8px}"));
   assert.ok(home.includes(".order-summary-grid div:first-child{grid-column:1/-1}"));
-  assert.ok(home.includes(".order-summary-grid div:last-child{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between"));
+  assert.ok(home.includes(".order-summary-grid div:last-child{position:absolute;top:12px;right:12px;display:flex;align-items:center;justify-content:flex-end"));
+  assert.ok(home.includes("overflow-wrap:normal;word-break:normal;hyphens:none"));
   assert.ok(home.includes('data-summary="emotional-session"'));
   assert.ok(home.includes('data-summary="astrology-total"'));
 });
@@ -38,7 +40,8 @@ test("switching service preserves scroll position and updates tab state", () => 
   assert.ok(home.includes("const scrollPosition=window.scrollY;"));
   assert.ok(home.includes('x.setAttribute("aria-selected","false")'));
   assert.ok(home.includes('tab.setAttribute("aria-selected","true")'));
-  assert.ok(home.includes('requestAnimationFrame(()=>window.scrollTo({top:scrollPosition,behavior:"auto"}))'));
+  assert.ok(home.includes("requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:scrollPosition,behavior:\"auto\"})))"));
+  assert.ok(home.includes("#book{overflow-anchor:none}"));
 });
 
 test("mobile WhatsApp button is compact without changing contact target or accessible label", () => {
@@ -49,4 +52,19 @@ test("mobile WhatsApp button is compact without changing contact target or acces
   assert.ok(widget.includes("height: 46px;"));
   assert.ok(widget.includes("border-radius: 50%;"));
   assert.ok(widget.includes("clip: rect(0, 0, 0, 0);"));
+});
+
+test("guide cards are visibly named and provide a touch and keyboard popup effect", () => {
+  const home = read("index.html");
+  const guideStart = home.indexOf('<section class="soft" id="guide">');
+  const guideEnd = home.indexOf('<section class="soft" id="faq">', guideStart);
+  const guide = home.slice(guideStart, guideEnd);
+  assert.ok(guide.includes("aria-label=\"Highlight Utkarsh's guide profile\""));
+  assert.ok(guide.includes("aria-label=\"Highlight Anshika's guide profile\""));
+  assert.equal((guide.match(/tabindex="0" role="button" aria-pressed="false"/g) || []).length, 2);
+  assert.ok(guide.includes("<h3>Utkarsh</h3>"));
+  assert.ok(guide.includes("<h3>Anshika</h3>"));
+  assert.ok(home.includes(".guide-person:hover,.guide-person:focus-visible,.guide-person.is-active{transform:translateY(-4px)"));
+  assert.ok(home.includes('card.addEventListener("click",toggleGuideCard)'));
+  assert.ok(home.includes('if((event.key==="Enter"||event.key===" ")&&!event.repeat)'));
 });
