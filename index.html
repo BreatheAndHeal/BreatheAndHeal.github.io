@@ -117,6 +117,41 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 
 .brand-emblem{display:block;width:38px;height:38px;object-fit:contain;flex:0 0 38px}
 .birth-time-unknown{margin-top:10px}.birth-time-unknown span{color:var(--muted)}
+
+/* Mobile-first booking refinement: compact controls, clear hierarchy, stable summaries. */
+.before-pay-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;list-style:none}
+.before-pay-summary::-webkit-details-marker{display:none}
+.before-pay-chevron{flex:0 0 auto;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#e3ebdf;color:var(--sage);font-size:19px;line-height:1;transition:transform .18s ease}
+.before-pay[open] .before-pay-chevron{transform:rotate(180deg)}
+.before-pay-content{padding-top:2px}
+.service-tab:focus-visible,.before-pay-summary:focus-visible{outline:3px solid #91a993;outline-offset:3px}
+@media(max-width:560px){
+  .book-panel{padding:14px;border-radius:22px}
+  .service-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 14px}
+  .service-switch button{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:44px;padding:10px 7px;font-size:13px;line-height:1.25;text-align:center;white-space:normal}
+  .before-pay{margin:10px 0 16px;padding:12px 13px;border-radius:17px}
+  .before-pay-summary{gap:8px}
+  .before-pay-heading{gap:9px;align-items:center}
+  .before-pay-mark{width:26px;height:26px;flex-basis:26px;margin-top:0}
+  .before-pay h3{font-size:20px;line-height:1.15;margin:0 0 3px}
+  .before-pay-heading .kicker{font-size:9px}
+  .before-pay-intro{font-size:11px;line-height:1.35}
+  .before-pay-chevron{width:25px;height:25px;font-size:17px}
+  .before-pay-list{gap:7px;margin:12px 0}
+  .before-pay-list li{font-size:11px;line-height:1.45}
+  .before-pay-links{gap:6px 10px;padding-top:10px;font-size:10px}
+  .order-summary{margin:12px 0;padding:12px;border-radius:14px}
+  .order-summary-title{margin-bottom:7px;font-size:13px}
+  .order-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px}
+  .order-summary-grid div:first-child{grid-column:1/-1}
+  .order-summary-grid div:last-child{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:9px;margin-top:2px}
+  .order-summary-grid dt{font-size:11px;line-height:1.3}
+  .order-summary-grid dd{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+  .order-summary-grid dd[data-summary-total]{font-size:17px;margin:0;text-align:right}
+  .consent-field{padding:11px 12px;border-radius:14px}
+  .consent-label{font-size:11px;line-height:1.5}
+  .field textarea{min-height:94px}
+}
 </style>
 <meta property="og:site_name" content="The Unsaid">
 <meta property="og:image" content="https://theunsaidcare.com/og-image.jpg">
@@ -324,17 +359,22 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </div></div></section>
 
 <section id="book"><div class="wrap book"><div><p class="kicker">BOOK YOUR SPACE</p><h2 class="section-title">Tell us a little. We'll take it from there.</h2><p class="section-copy">Choose your session, pick a time, pay securely and get your confirmation with the Google Meet link by email. Your selected slot is held for 10 minutes while you complete payment.</p><div class="section-copy contact-details"><strong>Email:</strong> <a href="mailto:theunsaid.care@gmail.com">theunsaid.care@gmail.com</a><br><strong>Phone / WhatsApp:</strong> <a href="tel:+918707236175">8707236175</a> · <a href="https://wa.me/918707236175?text=Hi%20The%20Unsaid%2C%20I%20want%20to%20know%20more" target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a></div><p class="call-option-note">Prefer a regular phone call instead of Google Meet? Please contact us before booking so we can confirm availability.</p><div class="booking-links"><a class="btn secondary" href="mailto:theunsaid.care@gmail.com">Email us →</a><a class="btn secondary" href="tel:+918707236175">Phone →</a></div></div>
-<div class="book-panel"><div class="service-switch" role="tablist"><button type="button" class="service-tab active" data-service="emotional">Emotional Guidance</button><button type="button" class="service-tab" data-service="astrology">Vedic Astrology</button></div>
-<aside class="before-pay" aria-labelledby="beforePayTitle">
-<div class="before-pay-heading"><span class="before-pay-mark" aria-hidden="true">✓</span><div><p class="kicker">BEFORE CHECKOUT</p><h3 id="beforePayTitle">Before you pay</h3><p class="before-pay-intro">A quick check so you know what to expect.</p></div></div>
-<ul class="before-pay-list">
-<li><strong>Check your booking.</strong> Confirm your service, session duration, date and available time. The total is shown in the order summary and again in Razorpay checkout.</li>
-<li><strong>Complete checkout promptly.</strong> Your selected slot is held for 10 minutes while payment is in progress.</li>
-<li><strong>Look out for your email.</strong> Once payment is verified and your booking is confirmed, your booking details and Google Meet link are sent to the email address you entered. Check your spam or junk folder if needed.</li>
-<li><strong>Avoid paying twice.</strong> If money is debited but the payment or booking status is unclear, do not try again until the first transaction is confirmed failed or reversed. Contact support with your booking details and payment reference, if available.</li>
-</ul>
-<div class="before-pay-links"><span>Before checkout, read:</span><a href="/terms">Terms</a><a href="/refunds">Cancellation &amp; refunds</a><a href="/privacy">Privacy</a></div>
-</aside>
+<div class="book-panel"><div class="service-switch" role="tablist" aria-label="Choose a service"><button type="button" class="service-tab active" id="emotionalTab" role="tab" aria-selected="true" aria-controls="emotionalPanel" data-service="emotional">Emotional Guidance</button><button type="button" class="service-tab" id="astrologyTab" role="tab" aria-selected="false" aria-controls="astrologyPanel" data-service="astrology">Vedic Astrology</button></div>
+<details class="before-pay" id="beforePay" aria-labelledby="beforePayTitle" open>
+<summary class="before-pay-summary">
+  <div class="before-pay-heading"><span class="before-pay-mark" aria-hidden="true">✓</span><div><p class="kicker">BEFORE CHECKOUT</p><h3 id="beforePayTitle">Before you pay</h3><p class="before-pay-intro">A quick check so you know what to expect.</p></div></div>
+  <span class="before-pay-chevron" aria-hidden="true">⌄</span>
+</summary>
+<div class="before-pay-content">
+  <ul class="before-pay-list">
+  <li><strong>Check your booking.</strong> Confirm your service, session duration, date and available time. The total is shown in the order summary and again in Razorpay checkout.</li>
+  <li><strong>Complete checkout promptly.</strong> Your selected slot is held for 10 minutes while payment is in progress.</li>
+  <li><strong>Look out for your email.</strong> Once payment is verified and your booking is confirmed, your booking details and Google Meet link are sent to the email address you entered. Check your spam or junk folder if needed.</li>
+  <li><strong>Avoid paying twice.</strong> If money is debited but the payment or booking status is unclear, do not try again until the first transaction is confirmed failed or reversed. Contact support with your booking details and payment reference, if available.</li>
+  </ul>
+  <div class="before-pay-links"><span>Before checkout, read:</span><a href="/terms">Terms</a><a href="/refunds">Cancellation &amp; refunds</a><a href="/privacy">Privacy</a></div>
+</div>
+</details>
 <div class="booking-panel active" id="emotionalPanel"><form id="booking"><div class="field"><label for="session">Session</label><select id="session" required><option value="">Choose a session</option><option value="Focused Conversation — 20 min">Focused Conversation — 20 min</option><option value="Deep Conversation — 40 min">Deep Conversation — 40 min</option><option value="Extended Session — 60 min">Extended Session — 60 min</option></select></div><div class="form-row"><div class="field"><label for="name">Name</label><input id="name" required></div><div class="field"><label for="email">Email</label><input id="email" type="email" required></div></div><div class="form-row"><div class="field"><label for="whatsapp">Phone number</label><input id="whatsapp" type="tel" required></div><div class="field"><label for="date">Choose date</label><input id="date" type="date" required></div></div><div class="form-row"><div class="field"><label for="time">Available time</label><select id="time" class="slot-select" required disabled><option value="">Choose a session and date first</option></select><div class="slot-help">Available daily, including Sundays, 7:00 AM–11:00 PM IST. Start times are every 20 minutes; sessions finish by 11:00 PM.</div></div><div class="field"><label for="language">Language</label><select id="language"><option>Hindi</option><option>Hinglish</option><option>English</option></select></div></div><div class="field"><label for="message">What would you like to talk about?</label><textarea id="message" placeholder="You can keep this simple. A few words are enough."></textarea></div><div class="field"><label for="guidePreference">Who would you prefer to speak with?</label><select id="guidePreference"><option value="no_preference" selected>No preference</option><option value="utkarsh">Utkarsh</option><option value="anshika">Anshika</option></select><p class="slot-help">We’ll take your preference into account when arranging your session.</p></div><div class="consent-field"><label class="consent-label" for="emotionalConsent"><input type="checkbox" id="emotionalConsent" name="consent" required><span>I am 18 or older and I have read and agree to the <a href="/privacy">Privacy Policy</a>, <a href="/terms">Terms</a> and <a href="/refunds">Cancellation and Refunds</a>.</span></label></div><div class="order-summary" id="emotionalOrderSummary" aria-live="polite" aria-label="Order summary"><strong class="order-summary-title">Order summary</strong><dl class="order-summary-grid"><div><dt>Session</dt><dd data-summary="emotional-session">—</dd></div><div><dt>Date</dt><dd data-summary="emotional-date">—</dd></div><div><dt>Time (IST)</dt><dd data-summary="emotional-time">—</dd></div><div><dt>Total</dt><dd data-summary="emotional-total" data-summary-total>—</dd></div></dl></div><button class="btn primary" id="emotionalSubmit" type="submit" style="width:100%" disabled>Continue to payment →</button><p id="status" class="status" aria-live="polite"></p><div id="emotionalSuccess" class="booking-success" aria-live="polite"></div></form></div>
 <div class="booking-panel" id="astrologyPanel"><form id="astrologyBooking"><div class="form-row"><div class="field"><label for="astroSession">Astrology session</label><select id="astroSession" required><option value="">Choose a reading</option><option value="Vedic Insight — 20 min · ₹899">Vedic Insight — 20 min</option><option value="Deep Vedic Reading — 40 min · ₹1,399">Deep Vedic Reading — 40 min</option><option value="Complete Vedic Guidance — 60 min · ₹1,999">Complete Vedic Guidance — 60 min</option></select></div><div class="field"><label for="astroLanguage">Language</label><select id="astroLanguage" required><option value="">Choose a language</option><option value="Hindi">Hindi</option><option value="Hinglish">Hinglish</option><option value="English">English</option></select></div></div><div class="form-row"><div class="field"><label for="astroName">Name</label><input id="astroName" required></div><div class="field"><label for="astroEmail">Email</label><input id="astroEmail" type="email" required></div></div><div class="form-row"><div class="field"><label for="astroWhatsapp">Phone number</label><input id="astroWhatsapp" type="tel" required></div><div class="field"><label for="astroDate">Choose date</label><input id="astroDate" type="date" required></div></div><div class="form-row"><div class="field"><label for="birthDate">Birth date</label><input id="birthDate" type="date" required></div><div class="field"><label for="birthTime">Exact birth time</label><input id="birthTime" type="time" required aria-describedby="birthTimeHelp"><label class="consent-label birth-time-unknown" for="birthTimeUnknown"><input id="birthTimeUnknown" type="checkbox" name="birthTimeUnknown"><span>I don't know my exact birth time</span></label><p class="slot-help" id="birthTimeHelp">Select this if you are unsure; the birth time will be left blank.</p></div></div><div class="field"><label for="birthPlace">Birth place · worldwide</label><div class="location-wrap"><input id="birthPlace" placeholder="Search any city, town or place worldwide…" autocomplete="off" required aria-autocomplete="list" aria-controls="birthPlaceSuggestions" aria-expanded="false"><div id="birthPlaceSuggestions" class="location-suggestions" role="listbox"></div></div><div class="location-note">Search any city, town or place worldwide, including smaller cities and towns, then choose the matching result.</div></div><div class="form-row"><div class="field"><label for="astroTime">Available time</label><select id="astroTime" class="slot-select" required disabled><option value="">Choose a reading and date first</option></select><div class="slot-help">Available daily, including Sundays, 7:00 AM–11:00 PM IST. Start times are every 20 minutes; sessions finish by 11:00 PM.</div></div><div class="field"><label for="astroConcern">Main area</label><select id="astroConcern"><option>Career</option><option>Relationship</option><option>Marriage</option><option>Family</option><option>Finances</option><option>Life direction</option><option>Current phase</option><option>Spiritual growth</option><option>Something else</option></select></div></div><div class="field"><label for="astroMessage">What would you like to understand?</label><textarea id="astroMessage" placeholder="Tell us briefly what you want the reading to focus on."></textarea></div><div class="field"><label for="astroGuidePreference">Who would you prefer to speak with?</label><select id="astroGuidePreference"><option value="no_preference" selected>No preference</option><option value="utkarsh">Utkarsh</option><option value="anshika">Anshika</option></select><p class="slot-help">We’ll take your preference into account when arranging your session.</p></div><div class="consent-field"><label class="consent-label" for="astrologyConsent"><input type="checkbox" id="astrologyConsent" name="consent" required><span>I am 18 or older and I have read and agree to the <a href="/privacy">Privacy Policy</a>, <a href="/terms">Terms</a> and <a href="/refunds">Cancellation and Refunds</a>.</span></label></div><div class="order-summary" id="astrologyOrderSummary" aria-live="polite" aria-label="Order summary"><strong class="order-summary-title">Order summary</strong><dl class="order-summary-grid"><div><dt>Session</dt><dd data-summary="astrology-session">—</dd></div><div><dt>Date</dt><dd data-summary="astrology-date">—</dd></div><div><dt>Time (IST)</dt><dd data-summary="astrology-time">—</dd></div><div><dt>Total</dt><dd data-summary="astrology-total" data-summary-total>—</dd></div></dl></div><button class="btn primary" id="astrologySubmit" type="submit" style="width:100%" disabled>Continue to payment →</button><p id="astroStatus" class="status" aria-live="polite"></p><div id="astrologySuccess" class="booking-success" aria-live="polite"></div></form><p class="astro-note">Birth details are used for the purpose of the requested astrology reading. Please share only the information you are comfortable providing.</p></div>
 </div></div></section>
@@ -423,10 +463,21 @@ document.querySelectorAll(".choose").forEach(b=>b.addEventListener("click",()=>{
 document.querySelectorAll(".astro-choose").forEach(b=>b.addEventListener("click",()=>{document.querySelector('[data-service="astrology"]').click();document.getElementById("astroSession").value=b.dataset.astroSession.startsWith("Vedic Insight")?"Vedic Insight — 20 min · ₹899":b.dataset.astroSession.startsWith("Deep Vedic")?"Deep Vedic Reading — 40 min · ₹1,399":"Complete Vedic Guidance — 60 min · ₹1,999"}));
 
 document.querySelectorAll(".service-tab").forEach(tab=>tab.addEventListener("click",()=>{
- document.querySelectorAll(".service-tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");
+ const scrollPosition=window.scrollY;
+ document.querySelectorAll(".service-tab").forEach(x=>{
+   x.classList.remove("active");
+   x.setAttribute("aria-selected","false");
+ });
+ tab.classList.add("active");
+ tab.setAttribute("aria-selected","true");
  document.querySelectorAll(".booking-panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(tab.dataset.service==="astrology"?"astrologyPanel":"emotionalPanel").classList.add("active");
+ requestAnimationFrame(()=>window.scrollTo({top:scrollPosition,behavior:"auto"}));
 }));
+
+// Keep the checkout guidance expanded on larger screens and compact by default on phones.
+const beforePay=document.getElementById("beforePay");
+if(beforePay&&window.matchMedia("(max-width:560px)").matches) beforePay.open=false;
 
 const date=document.getElementById("date"),astroDate=document.getElementById("astroDate");
 const session=document.getElementById("session"),astroSession=document.getElementById("astroSession");
