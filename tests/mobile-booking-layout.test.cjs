@@ -35,13 +35,23 @@ test("order summary uses readable mobile rows and keeps total in the heading row
   assert.ok(home.includes('data-summary="astrology-total"'));
 });
 
-test("switching service preserves scroll position and updates tab state", () => {
+test("switching service keeps vertical scroll and resets accidental horizontal scroll", () => {
   const home = read("index.html");
   assert.ok(home.includes("const scrollPosition=window.scrollY;"));
   assert.ok(home.includes('x.setAttribute("aria-selected","false")'));
   assert.ok(home.includes('tab.setAttribute("aria-selected","true")'));
-  assert.ok(home.includes("requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:scrollPosition,behavior:\"auto\"})))"));
+  assert.ok(home.includes("requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({left:0,top:scrollPosition,behavior:\\\"auto\\\"})))"));
   assert.ok(home.includes("#book{overflow-anchor:none}"));
+});
+
+test("booking fields cannot widen the mobile layout through intrinsic widths", () => {
+  const home = read("index.html");
+  assert.ok(home.includes("#book, #book>.wrap, #book .book, #book .book-panel, #book .booking-panel,"));
+  assert.ok(home.includes("#book form, #book .form-row, #book .field, #book .order-summary{min-width:0;max-width:100%}"));
+  assert.ok(home.includes("#book .form-row{grid-template-columns:repeat(2,minmax(0,1fr))}"));
+  assert.ok(home.includes("#book .field input, #book .field select, #book .field textarea{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}"));
+  assert.ok(home.includes("#book .form-row{grid-template-columns:minmax(0,1fr)}"));
+  assert.ok(home.includes("window.scrollTo({left:0,top:scrollPosition,behavior:\"auto\"})"));
 });
 
 test("mobile WhatsApp button is compact without changing contact target or accessible label", () => {
