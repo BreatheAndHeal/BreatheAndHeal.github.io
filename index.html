@@ -61,6 +61,30 @@ section{padding:82px 0}.soft{background:var(--paper)}.center{text-align:center}.
  .faq details[open]>p{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line);line-height:1.55}
 }
 @media(hover:none){.faq details:active{transform:scale(.995);border-color:#a9b9aa;background:#f1f5ef}}
+.faq-disclosure{margin-top:28px;border:0}
+.faq-disclosure-summary{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px 26px;background:#eef3eb;border:1px solid #d7e0d4;border-radius:22px;cursor:pointer;list-style:none;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease,background .22s ease}
+.faq-disclosure-summary::-webkit-details-marker{display:none}
+.faq-disclosure-copy{min-width:0;flex:1;text-align:left}
+.faq-disclosure-copy .kicker{margin:0 0 8px}
+.faq-disclosure-copy .section-title{margin:0 0 7px;font-size:clamp(25px,3vw,34px);line-height:1.15}
+.faq-disclosure-copy .section-copy{margin:0;font-size:14px;line-height:1.5}
+.faq-disclosure-chevron{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:50%;background:#e0e9dc;color:var(--sage);font-size:21px;line-height:1;transition:transform .18s ease}
+.faq-disclosure[open] .faq-disclosure-chevron{transform:rotate(180deg)}
+.faq-disclosure[open]>.faq-disclosure-summary{background:#f1f5ef;border-color:#c5d0c2}
+.faq-disclosure-content{padding-top:16px}
+.faq-disclosure-content .faq{margin-top:0}
+@media(hover:hover){.faq-disclosure-summary:hover{transform:translateY(-3px);border-color:#a9b9aa;background:#fffdf8;box-shadow:0 12px 26px rgba(45,52,47,.09)}}
+.faq-disclosure-summary:focus-visible{outline:3px solid #91a993;outline-offset:3px}
+@media(hover:none){.faq-disclosure-summary:active{transform:scale(.995);border-color:#a9b9aa;background:#f1f5ef}}
+@media(max-width:560px){
+ .faq-disclosure{margin-top:22px}
+ .faq-disclosure-summary{gap:12px;padding:17px 16px;border-radius:18px}
+ .faq-disclosure-copy .kicker{margin-bottom:5px}
+ .faq-disclosure-copy .section-title{font-size:25px;margin-bottom:5px}
+ .faq-disclosure-copy .section-copy{font-size:12px;line-height:1.45}
+ .faq-disclosure-chevron{flex-basis:30px;width:30px;height:30px;font-size:18px}
+ .faq-disclosure-content{padding-top:12px}
+}
 footer{padding:42px 0 52px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.footer-links{display:flex;gap:18px;flex-wrap:wrap}
 .session-expect{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:24px;padding:30px;border:1px solid #d7e0d4;border-radius:26px;background:#eef3eb}.session-expect h3{font-family:"Playfair Display",serif;font-size:clamp(25px,3vw,34px);line-height:1.15;margin:8px 0 14px}.session-expect p{color:var(--muted);font-size:14px;margin:0 0 14px}.session-expect strong{color:var(--ink)}.session-expect .safety-note{font-size:12px;margin-top:10px}.session-expect .safety-note a{color:#465d4d;text-decoration:underline;text-underline-offset:3px}.session-actions{margin:14px 0 0;gap:8px}.session-actions .btn{padding:11px 15px;font-size:13px}@media(max-width:950px){.journal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.space-grid,.astro-intro,.session-expect{grid-template-columns:1fr}.astro-sessions{grid-template-columns:1fr}.links{display:none}.menu{display:block}.links.open{position:absolute;left:16px;right:16px;top:68px;display:grid;gap:4px;background:var(--paper);padding:14px;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.links.open a{padding:10px}.hero-grid,.journey,.assess,.story,.book{grid-template-columns:1fr}.visual{min-height:430px}.impact-grid{grid-template-columns:repeat(2,1fr)}.cards,.sessions,.steps,.feedback{grid-template-columns:1fr}}
 @media(max-width:560px){.before-pay{padding:17px 15px}.before-pay h3{font-size:25px}.before-pay-list{gap:9px}.journal-grid{grid-template-columns:1fr}.journal-card{min-height:unset;padding:24px}.wrap{padding:0 16px}.hero{padding-top:46px}.hero h1{font-size:45px}.lead{font-size:17px}.form-row{grid-template-columns:1fr}.visual{min-height:360px}.room{left:0}.window{right:24px;top:36px;width:150px;height:180px}.chair{left:36px;bottom:60px;transform:scale(.83);transform-origin:bottom left}.plant{left:215px;transform:scale(.8);transform-origin:bottom left}.note{right:6px;bottom:7px}.impact-grid{grid-template-columns:1fr 1fr}.ring-wrap{grid-template-columns:1fr}.donut{margin:auto}.choice-row{grid-template-columns:1fr 1fr}section{padding:65px 0}}
@@ -383,7 +407,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   </div>
 </section>
 
-<section class="soft" id="faq"><div class="wrap narrow"><div class="center"><p class="kicker">QUESTIONS</p><h2 class="section-title">Before you book.</h2><p class="section-copy">A few useful details before you choose a session.</p></div><div class="faq">
+<section class="soft" id="faq"><div class="wrap narrow"><details class="faq-disclosure" id="faqDisclosure"><summary class="faq-disclosure-summary"><div class="faq-disclosure-copy"><p class="kicker">QUESTIONS</p><h2 class="section-title">Before you book.</h2><p class="section-copy">A few useful details before you choose a session.</p></div><span class="faq-disclosure-chevron" aria-hidden="true">⌄</span></summary><div class="faq-disclosure-content"><div class="faq">
 <details><summary>What can I talk about in a session?</summary><p>You can bring overthinking, relationship concerns, heartbreak, loneliness, family pressure, career confusion, self-doubt, life decisions or something else you would like to put into words.</p></details>
 <details><summary>How do online sessions work? Do I need my camera on?</summary><p>After your payment is verified and the booking is confirmed, your session details and Google Meet link are sent to your booking email. You can keep your camera off; video is not required. Prefer a regular phone call? Contact us before booking so we can confirm whether it can be arranged.</p></details>
 <details><summary>How should I prepare for my first session?</summary><p>You do not need a perfect explanation. A few honest words about what is on your mind are enough. You can write down one or two things you would most like to explore, and share only what you feel comfortable sharing.</p></details>
@@ -392,7 +416,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <details><summary>How is my information handled?</summary><p>The form asks for information needed to arrange and manage your booking. For details about booking information, payment and scheduling providers, read the <a href="/privacy">Privacy page</a>.</p></details>
 <details><summary>What if I need to cancel or reschedule?</summary><p>If you cancel at least 24 hours before your session, you may choose a full refund to your original payment method or one free reschedule, subject to availability. For cancellations less than 24 hours before the session, a refund is normally not available; at our discretion, we may offer one reschedule, subject to availability. No-shows are not refundable or reschedulable. If The Unsaid cancels, you may choose a full refund or a free reschedule. Approved refunds usually appear in 5–7 working days after initiation. Read the full <a href="/refunds">Cancellation &amp; Refunds policy</a>.</p></details>
 <details><summary>What if money is debited but my booking status is unclear?</summary><p>Please do not make a second payment. Contact us with your Booking ID, scheduled date and time, the email address used for the booking, and your payment reference if available. Within 48 hours of receiving the details needed to investigate, we will confirm the booking or initiate a refund if we cannot confirm it. A refund usually appears in the original payment method within 5–7 working days after initiation.</p></details>
-</div></div></section>
+</div></div></details></div></section>
 
 <section id="book"><div class="wrap book"><div><p class="kicker">BOOK YOUR SPACE</p><h2 class="section-title">Tell us a little. We'll take it from there.</h2><p class="section-copy">Choose your session, pick a time, pay securely and get your confirmation with the Google Meet link by email. Your selected slot is held for 10 minutes while you complete payment.</p><div class="section-copy contact-details"><strong>Email:</strong> <a href="mailto:theunsaid.care@gmail.com">theunsaid.care@gmail.com</a><br><strong>Phone / WhatsApp:</strong> <a href="tel:+918707236175">8707236175</a> · <a href="https://wa.me/918707236175?text=Hi%20The%20Unsaid%2C%20I%20want%20to%20know%20more" target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a></div><p class="call-option-note">Prefer a regular phone call instead of Google Meet? Please contact us before booking so we can confirm availability.</p><div class="booking-links"><a class="btn secondary" href="mailto:theunsaid.care@gmail.com">Email us →</a><a class="btn secondary" href="tel:+918707236175">Phone →</a></div></div>
 <div class="book-panel"><div class="service-switch" role="tablist" aria-label="Choose a service"><button type="button" class="service-tab active" id="emotionalTab" role="tab" aria-selected="true" aria-controls="emotionalPanel" data-service="emotional">Emotional Guidance</button><button type="button" class="service-tab" id="astrologyTab" role="tab" aria-selected="false" aria-controls="astrologyPanel" data-service="astrology">Vedic Astrology</button></div>
