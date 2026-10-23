@@ -21,7 +21,7 @@ test("before-payment guidance is a native disclosure and is collapsed by default
   assert.ok(!home.includes('<details class="before-pay" id="beforePay" aria-labelledby="beforePayTitle" open>'));
   assert.ok(home.includes('<summary class="before-pay-summary">'));
   assert.ok(home.includes('const beforePay=document.getElementById("beforePay");'));
-  assert.ok(home.includes('beforePay.open=!window.matchMedia("(max-width:560px)").matches;'));
+  assert.ok(home.includes('if(beforePay) beforePay.open=false;'));
   assert.ok(home.includes("Avoid paying twice."));
 });
 
@@ -77,4 +77,23 @@ test("guide cards are visibly named and provide a touch and keyboard popup effec
   assert.ok(home.includes(".guide-person:hover,.guide-person:focus-visible,.guide-person.is-active{transform:translateY(-4px)"));
   assert.ok(home.includes('card.addEventListener("click",toggleGuideCard)'));
   assert.ok(home.includes('if((event.key==="Enter"||event.key===" ")&&!event.repeat)'));
+});
+
+test("Before You Pay starts collapsed across desktop and mobile", () => {
+  const home = read("index.html");
+  assert.ok(home.includes('<details class="before-pay" id="beforePay" aria-labelledby="beforePayTitle">'));
+  assert.ok(!home.includes('<details class="before-pay" id="beforePay" aria-labelledby="beforePayTitle" open>'));
+  assert.ok(home.includes('if(beforePay) beforePay.open=false;'));
+  assert.ok(!home.includes('beforePay.open=!window.matchMedia("(max-width:560px)").matches;'));
+});
+
+test("Before You Book FAQ rows match the checkout accordion interaction", () => {
+  const home = read("index.html");
+  assert.ok(home.includes(".faq summary{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;font-weight:600;list-style:none}"));
+  assert.ok(home.includes('.faq summary::after{content:"⌄";display:grid;place-items:center;flex:0 0 28px'));
+  assert.ok(home.includes(".faq details[open] summary::after{transform:rotate(180deg)}"));
+  assert.ok(home.includes("@media(hover:hover){.faq details:hover{transform:translateY(-3px)"));
+  assert.ok(home.includes("@media(hover:none){.faq details:active{transform:scale(.995)"));
+  assert.ok(home.includes('document.querySelectorAll(".faq details > summary").forEach(summary=>{'));
+  assert.ok(home.includes('if(item) item.open=!item.open;'));
 });
