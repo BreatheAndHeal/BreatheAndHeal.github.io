@@ -20,8 +20,14 @@ test("both booking forms offer optional guide preference and default to no prefe
     assert.doesNotMatch(field[0], /\brequired\b/, id + " must remain optional");
     assert.ok(home.includes('guidePreference:q("' + key + '")'), id + " must be sent to the backend");
   }
-  assert.match(home, /do our best to accommodate it/);
-  assert.match(home, /Available times remain based on the shared calendar/);
+  const emotionalForm = home.match(/<form id="booking">([\\s\\S]*?)<\\/form>/)?.[1] || "";
+  const astrologyForm = home.match(/<form id="astrologyBooking">([\\s\\S]*?)<\\/form>/)?.[1] || "";
+  assert.ok(emotionalForm.indexOf('id="message"') < emotionalForm.indexOf('id="guidePreference"'),
+    "emotional guide preference should follow the message field");
+  assert.ok(astrologyForm.indexOf('id="astroMessage"') < astrologyForm.indexOf('id="astroGuidePreference"'),
+    "astrology guide preference should follow the message field");
+  assert.equal((home.match(/We’ll take your preference into account when arranging your session\\./g) || []).length, 2);
+  assert.doesNotMatch(home, /Available times remain based on the shared calendar/);
 });
 
 test("create-order validates, persists, migrates and updates guide preference on unpaid retry", () => {
