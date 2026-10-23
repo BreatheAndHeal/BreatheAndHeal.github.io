@@ -103,15 +103,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:560px){.site-footer-inner{padding:0 16px}.site-footer-links{gap:9px 14px}.site-social-link{width:40px;height:40px}}
 
 
-.guide-layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:36px;align-items:center;max-width:900px}
-.guide-avatar{width:190px;height:190px;border:1px solid var(--line);border-radius:50%;background:#e9efe5;display:grid;place-items:center;overflow:hidden;margin:auto}
-.guide-avatar img{display:block;width:66%;height:66%;object-fit:contain}
-.guide-avatar-fallback{font-size:72px;line-height:1;color:#526957}
-.guide-copy .section-title{margin-bottom:12px}
-.guide-copy p{color:var(--muted);font-size:15px}
-.guide-copy .guide-name{font:600 25px/1.2 "Playfair Display",serif;color:var(--ink);margin:0 0 12px}
-.guide-photo-note{font-size:12px!important;color:var(--muted)!important}
-@media(max-width:650px){.guide-layout{grid-template-columns:1fr;gap:22px;text-align:center}.guide-avatar{width:160px;height:160px}.guide-copy .section-title{font-size:36px}}
+#guide{padding:54px 0}
+.guide-intro{max-width:720px;margin:0 auto 26px;text-align:center}
+.guide-intro .section-title{margin-bottom:12px}
+.guide-intro .section-copy{max-width:660px;margin:0 auto}
+.guide-people{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:760px;margin:0 auto}
+.guide-person{background:#f8f4ec;border:1px solid var(--line);border-radius:20px;padding:20px 24px}
+.guide-person h3{font:600 25px/1.2 "Playfair Display",serif;color:var(--ink);margin:0 0 8px}
+.guide-person .guide-role{font-size:13px;font-weight:700;color:var(--sage);margin:0}
+.guide-person .guide-experience{font-size:14px;color:var(--muted);margin:6px 0 0}
+@media(max-width:650px){.guide-people{grid-template-columns:1fr;gap:12px}.guide-person{padding:18px 20px}.guide-person h3{font-size:23px}}
 
 .brand-emblem{display:block;width:38px;height:38px;object-fit:contain;flex:0 0 38px}
 .birth-time-unknown{margin-top:10px}.birth-time-unknown span{color:var(--muted)}
@@ -289,26 +290,23 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </section>
 
 <section class="soft" id="guide">
-  <div class="wrap guide-layout">
-    <div class="guide-avatar" aria-label="The Unsaid guide emblem">
-      <img src="/assets/logo-emblem.svg" alt="" width="160" height="160" onerror="this.style.display='none';this.nextElementSibling.hidden=false">
-      <span class="guide-avatar-fallback" hidden aria-hidden="true">✦</span>
+  <div class="wrap">
+    <div class="guide-intro">
+      <p class="kicker">WHO YOU'LL SPEAK WITH</p>
+      <h2 class="section-title">Real people. Thoughtful conversations.</h2>
+      <p class="section-copy">The Unsaid sessions are conducted by Utkarsh and Anshika. Each conversation is shaped around your concerns, with thoughtful listening and space to reflect at your own pace.</p>
     </div>
-    <div class="guide-copy">
-      <p class="kicker">MEET YOUR GUIDES</p>
-      <h2 class="section-title">Two people behind The Unsaid.</h2>
-      <p>At The Unsaid, we believe meaningful conversations begin with being heard. Our sessions are conducted by Utkarsh and Anshika, who bring their individual experience, knowledge, and thoughtful approach to every conversation.</p>
-      <p>With 4+ years and 3+ years of experience respectively, alongside relevant academic qualifications and certifications, we aim to create a calm, respectful space where you can speak openly, reflect on your experiences, and explore your next steps at your own pace.</p>
-      <p class="guide-name">Utkarsh</p>
-      <p><strong>Session Guide · 4+ Years of Experience</strong></p>
-      <p>Utkarsh brings a calm, reflective approach to conversations about personal challenges and self-understanding. He values thoughtful listening and aims to help people explore their concerns without feeling judged or rushed.</p>
-      <p><strong>Qualifications:</strong> Relevant academic qualifications and certifications.</p>
-      <p class="guide-name">Anshika</p>
-      <p><strong>Session Guide · 3+ Years of Experience</strong></p>
-      <p>Anshika brings an attentive, considerate approach to every session. She aims to create a comfortable environment where people can express themselves, reflect on their experiences, and explore their concerns with greater clarity.</p>
-      <p><strong>Qualifications:</strong> Relevant academic qualifications and certifications.</p>
-      <p><strong>Our approach:</strong> Every person’s experience is different. We listen with care, respect your perspective, and make space for honest conversation and reflection.</p>
-      <p><strong>Languages:</strong> Hindi · Hinglish · English</p>
+    <div class="guide-people">
+      <article class="guide-person">
+        <h3>Utkarsh</h3>
+        <p class="guide-role">Session Guide</p>
+        <p class="guide-experience">4+ years of relevant experience</p>
+      </article>
+      <article class="guide-person">
+        <h3>Anshika</h3>
+        <p class="guide-role">Session Guide</p>
+        <p class="guide-experience">3+ years of relevant experience</p>
+      </article>
     </div>
   </div>
 </section>
