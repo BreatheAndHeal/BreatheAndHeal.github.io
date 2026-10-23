@@ -54,6 +54,7 @@ module.exports = async (req,res) => {
     const time=clean(body.time,5);
     const birthDate=clean(body.birthDate,10);
     const birthTime=clean(body.birthTime,5);
+    const birthTimeUnknown=body.birthTimeUnknown===true;
     const birthPlace=clean(body.birthPlace,200);
     if(!customerName || !isValidEmail(email) || !whatsapp || !date || !time || !isValidISODate(date) || !isValidHHMM(time))
       return json(res,400,{error:"Please complete all required booking details with valid date and time."});
@@ -61,8 +62,9 @@ module.exports = async (req,res) => {
       return json(res,400,{error:"Please enter a valid WhatsApp/phone number."});
 
     if(meta.service==="astrology"){
-      if(!birthDate || !isValidISODate(birthDate) || !isValidHHMM(birthTime) || !birthPlace){
-        return json(res,400,{error:"Please provide a valid birth date, exact birth time and birth place."});
+      const validBirthTime=birthTimeUnknown ? !birthTime : isValidHHMM(birthTime);
+      if(!birthDate || !isValidISODate(birthDate) || !validBirthTime || !birthPlace){
+        return json(res,400,{error:"Please provide a valid birth date and birth place, and enter your birth time or select that you do not know it."});
       }
     }
 
@@ -189,7 +191,7 @@ module.exports = async (req,res) => {
       VALUES
       (${bookingId},${meta.service},${sessionName},${meta.amount},${meta.duration},${customerName},${email},${whatsapp},
        ${date},${time},${clean(body.language,30)},${clean(body.concern,100)},${clean(body.message,5000)},
-       ${birthDate||null},${birthTime||null},${birthPlace||null},TRUE,NOW(),
+       ${birthDate||null},${birthTimeUnknown?null:(birthTime||null)},${birthPlace||null},TRUE,NOW(),
        'created','pending',${expiresAt})`;
 
     try {
