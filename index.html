@@ -129,8 +129,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .before-pay[open] .before-pay-chevron{transform:rotate(180deg)}
 .before-pay-content{padding-top:2px}
 .service-tab:focus-visible,.before-pay-summary:focus-visible{outline:3px solid #91a993;outline-offset:3px}
+/* The booking form must never widen the mobile layout through intrinsic field widths. */
+#book, #book>.wrap, #book .book, #book .book-panel, #book .booking-panel,
+#book form, #book .form-row, #book .field, #book .order-summary{min-width:0;max-width:100%}
+#book .book{grid-template-columns:minmax(0,1fr)}
+#book .form-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+#book .field input, #book .field select, #book .field textarea{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+#book .field select{white-space:normal;text-overflow:ellipsis}
+#book .section-title{max-width:100%;overflow-wrap:break-word}
 @media(max-width:560px){
-  .book-panel{padding:14px;border-radius:22px}
+  #book .form-row{grid-template-columns:minmax(0,1fr)}
+  #book .book-panel{width:100%;max-width:100%;min-width:0;padding:14px;border-radius:22px}
+  #book .service-switch{width:100%;min-width:0}
+  #book .service-switch button{overflow-wrap:anywhere}
+  #book .order-summary, #book .consent-field, #book .before-pay{min-width:0;max-width:100%}
   .service-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 14px}
   .service-switch button{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:44px;padding:10px 7px;font-size:13px;line-height:1.25;text-align:center;white-space:normal}
   .before-pay{margin:10px 0 16px;padding:12px 13px;border-radius:17px}
@@ -477,7 +489,7 @@ document.querySelectorAll(".service-tab").forEach(tab=>tab.addEventListener("cli
  tab.setAttribute("aria-selected","true");
  document.querySelectorAll(".booking-panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(tab.dataset.service==="astrology"?"astrologyPanel":"emotionalPanel").classList.add("active");
- requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:scrollPosition,behavior:"auto"})));
+ requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({left:0,top:scrollPosition,behavior:"auto"})));
 }));
 
 // Use the responsive default before the browser paints an expanded mobile disclosure.
