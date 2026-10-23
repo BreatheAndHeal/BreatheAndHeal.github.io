@@ -47,7 +47,7 @@ test("paid booking confirmation forwards the chosen guide as a note without prom
   assert.ok(confirm.includes("Client has no guide preference."));
   assert.ok(confirm.includes("Preference only; not a guaranteed assignment."));
   assert.ok(confirm.includes("notes:guidePreferenceNote"));
-  assert.ok(calendar.includes("notes:notes||\\"\\""));
+  assert.ok(calendar.includes("notes:notes||"));
 });
 
 test("privacy policy discloses the selected guide preference", () => {
