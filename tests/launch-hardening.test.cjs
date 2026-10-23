@@ -79,11 +79,13 @@ test("paid-booking Calendar recheck fails closed and leaves confirmation retryab
   assert.match(src, /booking_status='paid_pending_confirmation'/);
 });
 
-test("reduced motion is respected and unverified impact claims are absent", () => {
+test("reduced motion is respected and the requested experience metrics are present", () => {
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   assert.match(html, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
-  assert.doesNotMatch(html, /<div class="impact-num">200\+<\/div><b>People supported<\/b>/);
-  assert.doesNotMatch(html, /<div class="impact-num">2\+<\/div><b>Years of practice<\/b>/);
+  assert.match(html, /<div class="impact-num">6\+ years<\/div><b>Relevant experience<\/b>/);
+  assert.match(html, /<div class="impact-num">1,200\+<\/div><b>Clients served<\/b>/);
+  assert.doesNotMatch(html, /<div class="impact-num">Your pace<\/div><b>No pressure to perform<\/b>/);
+  assert.doesNotMatch(html, /<div class="impact-num">1:1<\/div><b>Focused attention<\/b>/);
 });
 
 test("privacy policy describes the applied retention period", () => {
