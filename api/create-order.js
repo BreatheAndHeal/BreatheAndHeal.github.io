@@ -24,15 +24,16 @@ function isPreviewHost(req){
   return false;
 }
 
-let consentSchemaPromise=null;
-async function ensureConsentSchema(){
-  if(!consentSchemaPromise){
-    consentSchemaPromise=(async()=>{
+let bookingSchemaPromise=null;
+async function ensureBookingSchema(){
+  if(!bookingSchemaPromise){
+    bookingSchemaPromise=(async()=>{
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_accepted BOOLEAN NOT NULL DEFAULT FALSE`;
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ`;
-    })().catch(err=>{consentSchemaPromise=null;throw err;});
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guide_preference TEXT NOT NULL DEFAULT 'no_preference'`;
+    })().catch(err=>{bookingSchemaPromise=null;throw err;});
   }
-  return consentSchemaPromise;
+  return bookingSchemaPromise;
 }
 
 module.exports = async (req,res) => {
@@ -54,15 +55,20 @@ module.exports = async (req,res) => {
     const time=clean(body.time,5);
     const birthDate=clean(body.birthDate,10);
     const birthTime=clean(body.birthTime,5);
+    const birthTimeUnknown=body.birthTimeUnknown===true;
     const birthPlace=clean(body.birthPlace,200);
+    const guidePreference=clean(body.guidePreference,30).toLowerCase() || "no_preference";
+    if(!["utkarsh","anshika","no_preference"].includes(guidePreference))
+      return json(res,400,{error:"Please choose a valid guide preference."});
     if(!customerName || !isValidEmail(email) || !whatsapp || !date || !time || !isValidISODate(date) || !isValidHHMM(time))
       return json(res,400,{error:"Please complete all required booking details with valid date and time."});
     if(!/^[+()\d\s-]{7,25}$/.test(whatsapp))
       return json(res,400,{error:"Please enter a valid WhatsApp/phone number."});
 
     if(meta.service==="astrology"){
-      if(!birthDate || !isValidISODate(birthDate) || !isValidHHMM(birthTime) || !birthPlace){
-        return json(res,400,{error:"Please provide a valid birth date, exact birth time and birth place."});
+      const validBirthTime=birthTimeUnknown ? !birthTime : isValidHHMM(birthTime);
+      if(!birthDate || !isValidISODate(birthDate) || !validBirthTime || !birthPlace){
+        return json(res,400,{error:"Please provide a valid birth date and birth place, and enter your birth time or select that you do not know it."});
       }
     }
 
@@ -101,7 +107,7 @@ module.exports = async (req,res) => {
     }
 
     // Ensure existing databases have the consent evidence columns before booking insert.
-    await ensureConsentSchema();
+    await ensureBookingSchema();
 
     // Remove expired holds so slots become reusable.
     await sql`DELETE FROM slot_locks WHERE expires_at IS NOT NULL AND expires_at < NOW()`;
@@ -160,6 +166,11 @@ module.exports = async (req,res) => {
         new Date(existing.slot_lock_expires_at).getTime()>Date.now());
 
       if(activeUnpaidHold){
+        // A retry with the same unpaid booking may change the preferred guide.
+        // Persist the latest choice before reusing the existing payment order.
+        await sql`UPDATE bookings
+          SET guide_preference=${guidePreference},updated_at=NOW()
+          WHERE id=${existing.id} AND payment_status <> 'paid' AND booking_status='pending'`;
         return json(res,200,{
           bookingId:existing.id,
           accessToken:createBookingAccessToken(existing.id),
@@ -184,12 +195,12 @@ module.exports = async (req,res) => {
 
     await sql`INSERT INTO bookings
       (id,service,session_name,amount_inr,duration_minutes,customer_name,customer_email,customer_whatsapp,
-       booking_date,booking_time,language,concern,message,birth_date,birth_time,birth_place,consent_accepted,consent_at,
+       booking_date,booking_time,language,guide_preference,concern,message,birth_date,birth_time,birth_place,consent_accepted,consent_at,
        payment_status,booking_status,expires_at)
       VALUES
       (${bookingId},${meta.service},${sessionName},${meta.amount},${meta.duration},${customerName},${email},${whatsapp},
-       ${date},${time},${clean(body.language,30)},${clean(body.concern,100)},${clean(body.message,5000)},
-       ${birthDate||null},${birthTime||null},${birthPlace||null},TRUE,NOW(),
+       ${date},${time},${clean(body.language,30)},${guidePreference},${clean(body.concern,100)},${clean(body.message,5000)},
+       ${birthDate||null},${birthTimeUnknown?null:(birthTime||null)},${birthPlace||null},TRUE,NOW(),
        'created','pending',${expiresAt})`;
 
     try {
