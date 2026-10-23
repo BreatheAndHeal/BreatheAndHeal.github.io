@@ -50,7 +50,11 @@ test("paid booking confirmation forwards the chosen guide as a note without prom
   assert.ok(calendar.includes("notes:notes||"));
 });
 
-test("privacy policy discloses the selected guide preference", () => {
+test("privacy policy discloses guide preference and retention anonymizes expired unpaid selections", () => {
   const privacy = read("privacy.html");
+  const retention = read("lib/retention.js");
   assert.ok(privacy.includes("your selected guide preference, if you provide one"));
+  assert.ok(privacy.includes("guide preferences and astrology birth details"));
+  assert.ok(retention.includes("await ensureGuidePreferenceColumn();"));
+  assert.ok(retention.includes("guide_preference = 'no_preference'"));
 });
