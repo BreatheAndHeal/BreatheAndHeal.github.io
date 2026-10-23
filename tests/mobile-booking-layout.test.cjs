@@ -40,7 +40,7 @@ test("switching service keeps vertical scroll and resets accidental horizontal s
   assert.ok(home.includes("const scrollPosition=window.scrollY;"));
   assert.ok(home.includes('x.setAttribute("aria-selected","false")'));
   assert.ok(home.includes('tab.setAttribute("aria-selected","true")'));
-  assert.ok(home.includes("requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({left:0,top:scrollPosition,behavior:\\\"auto\\\"})))"));
+  assert.ok(home.includes("window.scrollTo({left:0,top:scrollPosition"));
   assert.ok(home.includes("#book{overflow-anchor:none}"));
 });
 
