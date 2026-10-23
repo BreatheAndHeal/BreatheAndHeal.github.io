@@ -49,9 +49,23 @@
       #the-unsaid-whatsapp-float {
         right: 14px;
         bottom: 14px;
-        padding: 12px 14px;
-        gap: 8px;
-        font-size: 13px;
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+        padding: 0;
+        gap: 0;
+        border-radius: 50%;
+      }
+      #the-unsaid-whatsapp-float span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
     }
     @media (prefers-reduced-motion: reduce) {
