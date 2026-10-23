@@ -1,12 +1,12 @@
-# The Unsaid brand assets
+# The Unsaid — approved brand assets
 
-Upload the approved clean logo and favicon files into this folder. Keep the exact filenames referenced by the site:
-- `logo-full.svg`
-- `logo-emblem.svg`
-- `favicon.svg`
-- `favicon-32.png`
-- `favicon-192.png`
-- `favicon-512.png`
-- `apple-touch-icon.png`
+These files are derived from the eight user-approved brand images uploaded in this project conversation. Preserve the deep forest green and warm cream palette. Do not replace them with stock people or unrelated imagery.
 
-Do not add these assets to the production branch until the draft PR has been reviewed and the remaining blockers are resolved.
+- `logo-full.svg`: transparent full wordmark with hands, star, “The Unsaid”, and “GUIDANCE & REFLECTION”.
+- `logo-emblem.svg`: transparent hands + star, for the header and guide fallback.
+- `favicon.svg`, `favicon-32.png`, `favicon-192.png`, `favicon-512.png`, `apple-touch-icon.png`: flat icon variants.
+- Root `favicon.ico`: 16px and 32px icons, derived from the uploaded favicon artwork.
+- Root `og-image.jpg`: 1200×630 share image, cream `#f4efe6`, approved full logo and approved tagline.
+- The original profile-picture options remain available in the user-provided asset bundle; they are not automatically substituted into site content.
+
+SVG, PNG, ICO and share-image files in this set are kept under 50 KB each, except that `og-image.jpg` is permitted to be under 300 KB.
