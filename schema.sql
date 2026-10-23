@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   booking_time TIME NOT NULL,
   booking_tz TEXT NOT NULL DEFAULT 'Asia/Kolkata',
   language TEXT,
+  guide_preference TEXT NOT NULL DEFAULT 'no_preference',
   concern TEXT,
   message TEXT,
   birth_date DATE,
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 -- Also add the consent columns when this schema is applied to an existing database.
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_accepted BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guide_preference TEXT NOT NULL DEFAULT 'no_preference';
 
 CREATE TABLE IF NOT EXISTS slot_locks (
   booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
