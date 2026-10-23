@@ -97,3 +97,19 @@ test("Before You Book FAQ rows match the checkout accordion interaction", () => 
   assert.ok(home.includes('document.querySelectorAll(".faq details > summary").forEach(summary=>{'));
   assert.ok(home.includes('if(item) item.open=!item.open;'));
 });
+
+test("Before You Book is a single collapsed card that reveals independently expandable FAQ answers", () => {
+  const home = read("index.html");
+  const faqStart = home.indexOf('<section class="soft" id="faq">');
+  const faqEnd = home.indexOf("</section>", faqStart);
+  const faqSection = home.slice(faqStart, faqEnd);
+  assert.ok(faqSection.includes('<details class="faq-disclosure" id="faqDisclosure">'));
+  assert.ok(!faqSection.includes('<details class="faq-disclosure" id="faqDisclosure" open>'));
+  assert.ok(faqSection.includes('<summary class="faq-disclosure-summary">'));
+  assert.ok(faqSection.includes("<h2 class=\"section-title\">Before you book.</h2>"));
+  assert.ok(faqSection.includes('<div class="faq-disclosure-content"><div class="faq">'));
+  assert.equal((faqSection.match(/<details><summary>/g) || []).length, 8);
+  assert.ok(home.includes("@media(hover:hover){.faq-disclosure-summary:hover{transform:translateY(-3px)"));
+  assert.ok(home.includes("@media(hover:none){.faq-disclosure-summary:active{transform:scale(.995)"));
+  assert.ok(home.includes('document.querySelectorAll(".faq details > summary").forEach(summary=>{'));
+});
